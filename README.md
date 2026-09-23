@@ -1,4 +1,3 @@
-```markdown
 # Multi-Agent Agentic AI Research Platform
 
 A **stateful, multi-agent Agentic AI research platform built with LangGraph** that autonomously decomposes a research topic into specialized perspectives, conducts multi-turn expert interviews, retrieves evidence from multiple sources, and synthesizes the findings into a structured research report.
@@ -705,5 +704,4 @@ Potential extensions include:
 
 ## Author
 
-Designed and implemented as an exploration of **enterprise Agentic AI architecture, multi-agent orchestration, and stateful AI workflows using LangGraph**.
-```
+Soumita Chowdhury
