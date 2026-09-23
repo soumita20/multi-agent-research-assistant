@@ -1,0 +1,591 @@
+2026-09-18 17:12:57 | INFO     | research_agent | Logging to file: research_agent.log
+2026-09-18 17:13:02 | INFO     | research_agent | CUDA available - using GPU: NVIDIA GeForce RTX 5050 Laptop GPU (CUDA 12.6)
+2026-09-18 17:13:02 | INFO     | research_agent | LANGSMITH_API_KEY loaded (starts with lsv2...)
+2026-09-18 17:13:02 | INFO     | research_agent | TAVILY_API_KEY loaded (starts with tvly...)
+2026-09-18 17:13:03 | INFO     | research_agent | Generating analyst panel for topic: How can subclinical hypothyroidism be controlled? Can it be cured completely?
+2026-09-18 17:13:04 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:15:05 | INFO     | research_agent | Generated 3 analyst persona(s).
+2026-09-18 17:15:12 | WARNING  | langgraph.checkpoint.serde.jsonplus | Deserializing unregistered type __main__.Analyst from checkpoint. This will be blocked in a future version. Set LANGGRAPH_STRICT_MSGPACK=true to block now, or add to allowed_msgpack_modules to allow explicitly: [('__main__', 'Analyst')]
+2026-09-18 17:15:12 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:17:21 | INFO     | research_agent | Generated 3 analyst persona(s).
+2026-09-18 17:18:06 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:18:40 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:19:18 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:21:07 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:21:08 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 17:21:08 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:21:09 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 17:21:10 | INFO     | research_agent | No Wikipedia context returned for query: "Hi Samantha, my name is Alex, and I'm an analyst working on a piece about managing subclinical hypothyroidism. I understand you've gone through this journey yourself and have a lot of valuable insight"
+2026-09-18 17:21:12 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:21:13 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 17:21:14 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:21:14 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 17:21:15 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-18 17:21:16 | INFO     | research_agent | No Wikipedia context returned for query: "Hi, I'm Alex, and I'm here to learn more about subclinical hypothyroidism from your expertise. You mentioned your focus on genetic predisposition and environmental factors in the development of subcli"
+2026-09-18 17:21:27 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:21:28 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 17:21:28 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:21:29 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 17:21:29 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-18 17:21:30 | INFO     | research_agent | No Wikipedia context returned for query: "Hello, Dr. Patel. My name is Alex, and I'm a medical journalist working on an article about the management and treatment strategies for subclinical hypothyroidism. I understand you have extensive expe"
+2026-09-18 17:22:27 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:25:09 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:29:35 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:30:25 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:30:55 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:31:52 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:34:47 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:34:54 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:35:27 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:35:34 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:35:35 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-18 17:35:37 | INFO     | research_agent | No Wikipedia context returned for query: 'subclinical hypothyroidism management and prevention genetic and environmental factors'
+2026-09-18 17:37:36 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:38:52 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:41:18 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:46:33 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 17:52:29 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 18:01:53 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 18:03:12 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 18:04:18 | INFO     | research_agent | Running interviews and drafting the report...
+2026-09-18 18:04:18 | INFO     | research_agent | Final report written to research_report.md
+2026-09-18 22:31:46 | INFO     | research_agent | Logging to file: research_agent.log
+2026-09-18 22:31:50 | INFO     | research_agent | CUDA available - using GPU: NVIDIA GeForce RTX 5050 Laptop GPU (CUDA 12.6)
+2026-09-18 22:31:50 | INFO     | research_agent | LANGSMITH_API_KEY loaded (starts with lsv2...)
+2026-09-18 22:31:50 | INFO     | research_agent | TAVILY_API_KEY loaded (starts with tvly...)
+2026-09-18 22:31:51 | INFO     | research_agent | Generating analyst panel for topic: How is the job market in Germany for AI engineers right now in 2026?
+2026-09-18 22:32:15 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:34:04 | INFO     | research_agent | Token usage | generate_analysts    | input=145    output=296    total=441   
+2026-09-18 22:34:04 | INFO     | research_agent | Generated 3 analyst persona(s).
+2026-09-18 22:35:00 | WARNING  | langgraph.checkpoint.serde.jsonplus | Deserializing unregistered type __main__.Analyst from checkpoint. This will be blocked in a future version. Set LANGGRAPH_STRICT_MSGPACK=true to block now, or add to allowed_msgpack_modules to allow explicitly: [('__main__', 'Analyst')]
+2026-09-18 22:35:04 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:37:01 | INFO     | research_agent | Token usage | generate_analysts    | input=179    output=318    total=497   
+2026-09-18 22:37:01 | INFO     | research_agent | Generated 3 analyst persona(s).
+2026-09-18 22:38:23 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:40:48 | INFO     | research_agent | Token usage | generate_analysts    | input=161    output=393    total=554   
+2026-09-18 22:40:48 | INFO     | research_agent | Generated 3 analyst persona(s).
+2026-09-18 22:41:49 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:42:27 | INFO     | research_agent | Token usage | generate_question    | input=304    output=102    total=406   
+2026-09-18 22:42:36 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:43:07 | INFO     | research_agent | Token usage | generate_question    | input=309    output=85     total=394   
+2026-09-18 22:43:17 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:43:56 | INFO     | research_agent | Token usage | generate_question    | input=310    output=108    total=418   
+2026-09-18 22:44:05 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:44:06 | INFO     | research_agent | Token usage | search_query:web     | input=209    output=3      total=212   
+2026-09-18 22:44:06 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 22:44:06 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:44:07 | INFO     | research_agent | Token usage | search_query:wiki    | input=209    output=3      total=212   
+2026-09-18 22:44:07 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 22:44:08 | INFO     | research_agent | No Wikipedia context returned for query: 'Dr. Anna Schmidt specializes in labor market trends and economic forecasting. She has over 15 years of experience in analyzing job market dynamics in Europe, with a focus on emerging technologies such'
+2026-09-18 22:44:11 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:44:14 | INFO     | research_agent | Token usage | search_query:web     | input=192    output=9      total=201   
+2026-09-18 22:44:14 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 22:44:14 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:44:17 | INFO     | research_agent | Token usage | search_query:wiki    | input=192    output=9      total=201   
+2026-09-18 22:44:17 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 22:44:18 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-18 22:44:19 | INFO     | research_agent | No Wikipedia context returned for query: 'Max Müller is an AI recruitment specialist with over 15 years of experience in the tech industry. He has a deep understanding of the skills and qualifications required for AI engineering roles and has'
+2026-09-18 22:44:22 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:44:24 | INFO     | research_agent | Token usage | search_query:web     | input=215    output=6      total=221   
+2026-09-18 22:44:24 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 22:44:24 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:44:26 | INFO     | research_agent | Token usage | search_query:wiki    | input=215    output=6      total=221   
+2026-09-18 22:44:26 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 22:44:27 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-18 22:44:28 | INFO     | research_agent | No Wikipedia context returned for query: 'Sabine Weber is a policy analyst with a focus on AI and technology policy in Germany. She has over 15 years of experience in analyzing and shaping policies that impact the development and deployment o'
+2026-09-18 22:45:36 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:45:46 | INFO     | research_agent | Token usage | generate_answer      | input=1589   output=25     total=1614  
+2026-09-18 22:46:41 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:46:46 | INFO     | research_agent | Token usage | generate_answer      | input=1240   output=4      total=1244  
+2026-09-18 22:48:11 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:48:13 | INFO     | research_agent | Token usage | generate_answer      | input=1923   output=4      total=1927  
+2026-09-18 22:48:15 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:48:15 | INFO     | research_agent | Token usage | generate_question    | input=429    output=1      total=430   
+2026-09-18 22:48:16 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:48:50 | INFO     | research_agent | Token usage | generate_question    | input=396    output=90     total=486   
+2026-09-18 22:48:51 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:49:30 | INFO     | research_agent | Token usage | generate_question    | input=420    output=101    total=521   
+2026-09-18 22:49:36 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:49:44 | INFO     | research_agent | Token usage | search_query:web     | input=233    output=21     total=254   
+2026-09-18 22:49:44 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:49:52 | INFO     | research_agent | Token usage | search_query:wiki    | input=233    output=21     total=254   
+2026-09-18 22:49:53 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-18 22:49:54 | INFO     | research_agent | No Wikipedia context returned for query: 'job market for AI engineers in Germany 2026'
+2026-09-18 22:49:59 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:50:01 | INFO     | research_agent | Token usage | search_query:web     | input=284    output=5      total=289   
+2026-09-18 22:50:01 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 22:50:01 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:50:03 | INFO     | research_agent | Token usage | search_query:wiki    | input=284    output=5      total=289   
+2026-09-18 22:50:03 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 22:50:04 | INFO     | research_agent | No Wikipedia context returned for query: 'Max Müller is an AI recruitment specialist with over 15 years of experience in the tech industry. He has a deep understanding of the skills and qualifications required for AI engineering roles and has'
+2026-09-18 22:50:11 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:50:22 | INFO     | research_agent | Token usage | search_query:wiki    | input=318    output=28     total=346   
+2026-09-18 22:50:22 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:50:24 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-18 22:50:26 | INFO     | research_agent | No Wikipedia context returned for query: 'current state of AI engineering jobs in Germany 2026 government policies supporting AI sector'
+2026-09-18 22:50:33 | INFO     | research_agent | Token usage | search_query:web     | input=318    output=28     total=346   
+2026-09-18 22:52:35 | INFO     | research_agent | Logging to file: research_agent.log
+2026-09-18 22:52:40 | INFO     | research_agent | CUDA available - using GPU: NVIDIA GeForce RTX 5050 Laptop GPU (CUDA 12.6)
+2026-09-18 22:52:40 | INFO     | research_agent | LANGSMITH_API_KEY loaded (starts with lsv2...)
+2026-09-18 22:52:40 | INFO     | research_agent | TAVILY_API_KEY loaded (starts with tvly...)
+2026-09-18 22:52:40 | INFO     | research_agent | Generating analyst panel for topic: How is the job market for AI Engineers in Germany in 2026 who have over 15 years of software development experience?
+2026-09-18 22:52:49 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:54:58 | INFO     | research_agent | Token usage | generate_analysts    | input=154    output=348    total=502   
+2026-09-18 22:54:58 | INFO     | research_agent | Generated 3 analyst persona(s).
+2026-09-18 22:57:16 | WARNING  | langgraph.checkpoint.serde.jsonplus | Deserializing unregistered type __main__.Analyst from checkpoint. This will be blocked in a future version. Set LANGGRAPH_STRICT_MSGPACK=true to block now, or add to allowed_msgpack_modules to allow explicitly: [('__main__', 'Analyst')]
+2026-09-18 22:57:22 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 22:59:30 | INFO     | research_agent | Token usage | generate_analysts    | input=201    output=346    total=547   
+2026-09-18 22:59:30 | INFO     | research_agent | Generated 3 analyst persona(s).
+2026-09-18 23:00:40 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:01:18 | INFO     | research_agent | Token usage | generate_question    | input=295    output=103    total=398   
+2026-09-18 23:01:27 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:01:56 | INFO     | research_agent | Token usage | generate_question    | input=299    output=81     total=380   
+2026-09-18 23:02:06 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:02:48 | INFO     | research_agent | Token usage | generate_question    | input=306    output=115    total=421   
+2026-09-18 23:02:54 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:02:54 | INFO     | research_agent | Token usage | search_query:wiki    | input=219    output=3      total=222   
+2026-09-18 23:02:54 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 23:02:55 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:02:56 | INFO     | research_agent | Token usage | search_query:web     | input=219    output=3      total=222   
+2026-09-18 23:02:56 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 23:02:56 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-18 23:02:57 | INFO     | research_agent | No Wikipedia context returned for query: 'How is the job market for AI Engineers in Germany in 2026'
+2026-09-18 23:02:59 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:03:10 | INFO     | research_agent | Token usage | search_query:web     | input=197    output=30     total=227   
+2026-09-18 23:03:10 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:03:21 | INFO     | research_agent | Token usage | search_query:wiki    | input=197    output=30     total=227   
+2026-09-18 23:03:22 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-18 23:03:23 | INFO     | research_agent | No Wikipedia context returned for query: 'job market for AI Engineers in Germany 2026 over 15 years software development experience trends changes'
+2026-09-18 23:03:26 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:03:27 | INFO     | research_agent | Token usage | search_query:wiki    | input=231    output=4      total=235   
+2026-09-18 23:03:27 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 23:03:27 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:03:28 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-18 23:03:29 | INFO     | research_agent | Token usage | search_query:web     | input=231    output=4      total=235   
+2026-09-18 23:03:29 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 23:03:29 | INFO     | research_agent | No Wikipedia context returned for query: 'How is the job market for AI Engineers in Germany in 2026'
+2026-09-18 23:04:33 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:04:45 | INFO     | research_agent | Token usage | generate_answer      | input=1460   output=30     total=1490  
+2026-09-18 23:05:46 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:08:25 | INFO     | research_agent | Token usage | generate_answer      | input=1423   output=400    total=1823  
+2026-09-18 23:09:30 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:09:45 | INFO     | research_agent | Token usage | generate_answer      | input=1483   output=39     total=1522  
+2026-09-18 23:09:47 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:09:47 | INFO     | research_agent | Token usage | generate_question    | input=426    output=1      total=427   
+2026-09-18 23:10:05 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:10:20 | INFO     | research_agent | Token usage | generate_question    | input=778    output=40     total=818   
+2026-09-18 23:10:22 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:10:22 | INFO     | research_agent | Token usage | generate_question    | input=458    output=1      total=459   
+2026-09-18 23:10:28 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:10:31 | INFO     | research_agent | Token usage | search_query:web     | input=249    output=8      total=257   
+2026-09-18 23:10:31 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 23:10:31 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:10:35 | INFO     | research_agent | Token usage | search_query:wiki    | input=249    output=10     total=259   
+2026-09-18 23:10:35 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 23:10:36 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-18 23:10:36 | INFO     | research_agent | No Wikipedia context returned for query: 'How is the job market for AI Engineers in Germany in 2026'
+2026-09-18 23:10:57 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:10:58 | INFO     | research_agent | Token usage | search_query:wiki    | input=636    output=3      total=639   
+2026-09-18 23:10:58 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 23:10:58 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:10:59 | INFO     | research_agent | Token usage | search_query:web     | input=636    output=3      total=639   
+2026-09-18 23:10:59 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 23:10:59 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-18 23:11:01 | INFO     | research_agent | wikipedia.page('Regulation of artificial intelligence') succeeded on retry - original failure looks transient (rate limit or a dropped response).
+2026-09-18 23:11:01 | INFO     | research_agent | No Wikipedia context returned for query: 'How is the job market for AI Engineers in Germany in 2026'
+2026-09-18 23:11:05 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:11:10 | INFO     | research_agent | Token usage | search_query:wiki    | input=270    output=12     total=282   
+2026-09-18 23:11:10 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 23:11:10 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:11:12 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-18 23:11:14 | INFO     | research_agent | No Wikipedia context returned for query: 'How is the job market for AI Engineers in Germany in 2026'
+2026-09-18 23:11:14 | INFO     | research_agent | Token usage | search_query:web     | input=270    output=12     total=282   
+2026-09-18 23:11:14 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 23:12:22 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:12:45 | INFO     | research_agent | Token usage | generate_answer      | input=2494   output=56     total=2550  
+2026-09-18 23:14:11 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:14:11 | INFO     | research_agent | Token usage | generate_answer      | input=2866   output=1      total=2867  
+2026-09-18 23:15:17 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:15:21 | INFO     | research_agent | Token usage | generate_answer      | input=2526   output=9      total=2535  
+2026-09-18 23:17:13 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:19:33 | INFO     | research_agent | Token usage | write_section        | input=2478   output=333    total=2811  
+2026-09-18 23:21:18 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:23:58 | INFO     | research_agent | Token usage | write_section        | input=2459   output=380    total=2839  
+2026-09-18 23:25:44 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:28:41 | INFO     | research_agent | Token usage | write_section        | input=2484   output=413    total=2897  
+2026-09-18 23:36:01 | INFO     | research_agent | Logging to file: research_agent.log
+2026-09-18 23:36:10 | INFO     | research_agent | CUDA available - using GPU: NVIDIA GeForce RTX 5050 Laptop GPU (CUDA 12.6)
+2026-09-18 23:36:10 | INFO     | research_agent | LANGSMITH_API_KEY loaded (starts with lsv2...)
+2026-09-18 23:36:10 | INFO     | research_agent | TAVILY_API_KEY loaded (starts with tvly...)
+2026-09-18 23:36:10 | INFO     | research_agent | Generating analyst panel for topic: How is the job market for AI Engineers in Germany in 2026?
+2026-09-18 23:36:33 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:38:39 | INFO     | research_agent | Token usage | generate_analysts    | input=143    output=342    total=485   
+2026-09-18 23:38:39 | INFO     | research_agent | Generated 3 analyst persona(s).
+2026-09-18 23:40:36 | WARNING  | langgraph.checkpoint.serde.jsonplus | Deserializing unregistered type __main__.Analyst from checkpoint. This will be blocked in a future version. Set LANGGRAPH_STRICT_MSGPACK=true to block now, or add to allowed_msgpack_modules to allow explicitly: [('__main__', 'Analyst')]
+2026-09-18 23:40:40 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:42:59 | INFO     | research_agent | Token usage | generate_analysts    | input=167    output=378    total=545   
+2026-09-18 23:42:59 | INFO     | research_agent | Generated 3 analyst persona(s).
+2026-09-18 23:44:41 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:46:39 | INFO     | research_agent | Token usage | generate_analysts    | input=164    output=322    total=486   
+2026-09-18 23:46:39 | INFO     | research_agent | Generated 3 analyst persona(s).
+2026-09-18 23:49:36 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:51:39 | INFO     | research_agent | Token usage | generate_analysts    | input=186    output=334    total=520   
+2026-09-18 23:51:39 | INFO     | research_agent | Generated 3 analyst persona(s).
+2026-09-18 23:52:23 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:53:04 | INFO     | research_agent | Token usage | generate_question    | input=278    output=114    total=392   
+2026-09-18 23:53:14 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:53:43 | INFO     | research_agent | Token usage | generate_question    | input=289    output=81     total=370   
+2026-09-18 23:53:52 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:54:24 | INFO     | research_agent | Token usage | generate_question    | input=286    output=90     total=376   
+2026-09-18 23:54:33 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:54:40 | INFO     | research_agent | Token usage | search_query:wiki    | input=219    output=18     total=237   
+2026-09-18 23:54:40 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:54:42 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-18 23:54:43 | INFO     | research_agent | No Wikipedia context returned for query: '2026 German AI engineer job market trends changes'
+2026-09-18 23:54:46 | INFO     | research_agent | Token usage | search_query:web     | input=219    output=18     total=237   
+2026-09-18 23:54:50 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:54:51 | INFO     | research_agent | Token usage | search_query:web     | input=186    output=3      total=189   
+2026-09-18 23:54:51 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 23:54:51 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:54:52 | INFO     | research_agent | Token usage | search_query:wiki    | input=186    output=3      total=189   
+2026-09-18 23:54:52 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 23:54:53 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-18 23:54:54 | INFO     | research_agent | No Wikipedia context returned for query: 'How is the job market for AI Engineers in Germany in 2026?'
+2026-09-18 23:54:56 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:54:56 | INFO     | research_agent | Token usage | search_query:web     | input=195    output=3      total=198   
+2026-09-18 23:54:56 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 23:54:57 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:54:58 | INFO     | research_agent | Token usage | search_query:wiki    | input=195    output=3      total=198   
+2026-09-18 23:54:58 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 23:54:58 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-18 23:54:59 | INFO     | research_agent | No Wikipedia context returned for query: 'How is the job market for AI Engineers in Germany in 2026?'
+2026-09-18 23:55:45 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:56:36 | INFO     | research_agent | Token usage | generate_answer      | input=1096   output=134    total=1230  
+2026-09-18 23:57:39 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:57:50 | INFO     | research_agent | Token usage | generate_answer      | input=1435   output=30     total=1465  
+2026-09-18 23:58:54 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:58:59 | INFO     | research_agent | Token usage | generate_answer      | input=1441   output=14     total=1455  
+2026-09-18 23:59:05 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:59:05 | INFO     | research_agent | Token usage | generate_question    | input=524    output=1      total=525   
+2026-09-18 23:59:06 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:59:06 | INFO     | research_agent | Token usage | generate_question    | input=398    output=1      total=399   
+2026-09-18 23:59:07 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:59:23 | INFO     | research_agent | Token usage | generate_question    | input=388    output=44     total=432   
+2026-09-18 23:59:29 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:59:37 | INFO     | research_agent | Token usage | search_query:web     | input=352    output=24     total=376   
+2026-09-18 23:59:38 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:59:46 | INFO     | research_agent | Token usage | search_query:wiki    | input=352    output=24     total=376   
+2026-09-18 23:59:47 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-18 23:59:48 | INFO     | research_agent | No Wikipedia context returned for query: 'job market for AI engineers in Germany 2026 trends and changes'
+2026-09-18 23:59:51 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:59:54 | INFO     | research_agent | Token usage | search_query:web     | input=216    output=10     total=226   
+2026-09-18 23:59:54 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 23:59:55 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-18 23:59:58 | INFO     | research_agent | Token usage | search_query:wiki    | input=216    output=10     total=226   
+2026-09-18 23:59:58 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-18 23:59:59 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-19 00:00:01 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 00:00:01 | INFO     | research_agent | wikipedia.page('Regulation of artificial intelligence') succeeded on retry - original failure looks transient (rate limit or a dropped response).
+2026-09-19 00:00:01 | INFO     | research_agent | No Wikipedia context returned for query: 'How is the job market for AI Engineers in Germany in 2026?'
+2026-09-19 00:00:12 | INFO     | research_agent | Token usage | search_query:wiki    | input=252    output=25     total=277   
+2026-09-19 00:00:12 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 00:00:13 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-19 00:00:15 | INFO     | research_agent | No Wikipedia context returned for query: 'job market for AI Engineers in Germany 2026 forecast trends analysis'
+2026-09-19 00:00:22 | INFO     | research_agent | Token usage | search_query:web     | input=252    output=25     total=277   
+2026-09-19 00:01:19 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 00:02:35 | INFO     | research_agent | Token usage | generate_answer      | input=1987   output=189    total=2176  
+2026-09-19 00:03:40 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 00:04:03 | INFO     | research_agent | Token usage | generate_answer      | input=2472   output=56     total=2528  
+2026-09-19 00:05:08 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 00:05:16 | INFO     | research_agent | Token usage | generate_answer      | input=2482   output=19     total=2501  
+2026-09-19 00:06:40 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 00:09:37 | INFO     | research_agent | Token usage | write_section        | input=1867   output=442    total=2309  
+2026-09-19 00:11:25 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 00:13:39 | INFO     | research_agent | Token usage | write_section        | input=2485   output=323    total=2808  
+2026-09-19 00:15:26 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 00:18:37 | INFO     | research_agent | Token usage | write_section        | input=2461   output=460    total=2921  
+2026-09-19 00:19:39 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 00:20:40 | INFO     | research_agent | Token usage | write_introduction   | input=1402   output=156    total=1558  
+2026-09-19 00:21:47 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 00:26:52 | INFO     | research_agent | Token usage | write_report         | input=1531   output=765    total=2296  
+2026-09-19 00:26:53 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 00:28:05 | INFO     | research_agent | Token usage | write_conclusion     | input=1402   output=186    total=1588  
+2026-09-19 00:28:05 | INFO     | research_agent | Running interviews and drafting the report...
+2026-09-19 00:28:05 | INFO     | research_agent | Token usage TOTAL | calls=34 | input=27724 | output=4647 | total=32371
+2026-09-19 00:28:05 | INFO     | research_agent | Final report written to research_report.md
+2026-09-19 14:12:23 | INFO     | research_agent | Logging to file: research_agent.log
+2026-09-19 14:12:32 | INFO     | research_agent | CUDA available - using GPU: NVIDIA GeForce RTX 5050 Laptop GPU (CUDA 12.6)
+2026-09-19 14:12:32 | INFO     | research_agent | LANGSMITH_API_KEY loaded (starts with lsv2...)
+2026-09-19 14:12:32 | INFO     | research_agent | TAVILY_API_KEY loaded (starts with tvly...)
+2026-09-19 14:12:32 | INFO     | research_agent | Generating analyst panel for topic: BMW Group's expansion into agentic AI, from its next-generation in-car intelligent assistant to enterprise AI platform initiatives.
+2026-09-19 14:12:56 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:15:05 | INFO     | research_agent | Token usage | generate_analysts    | input=149    output=347    total=496   
+2026-09-19 14:15:05 | INFO     | research_agent | Generated 3 analyst persona(s).
+2026-09-19 14:31:35 | INFO     | research_agent | Logging to file: research_agent.log
+2026-09-19 14:31:39 | INFO     | research_agent | CUDA available - using GPU: NVIDIA GeForce RTX 5050 Laptop GPU (CUDA 12.6)
+2026-09-19 14:31:39 | INFO     | research_agent | LANGSMITH_API_KEY loaded (starts with lsv2...)
+2026-09-19 14:31:39 | INFO     | research_agent | TAVILY_API_KEY loaded (starts with tvly...)
+2026-09-19 14:31:40 | INFO     | research_agent | Generating analyst panel for topic: BMW Group's expansion into agentic AI, from its next-generation in-car intelligent assistant to enterprise AI platform initiatives.
+2026-09-19 14:32:03 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:34:10 | INFO     | research_agent | Token usage | generate_analysts    | input=149    output=347    total=496   
+2026-09-19 14:34:10 | INFO     | research_agent | Generated 3 analyst persona(s).
+2026-09-19 14:35:24 | WARNING  | langgraph.checkpoint.serde.jsonplus | Deserializing unregistered type __main__.Analyst from checkpoint. This will be blocked in a future version. Set LANGGRAPH_STRICT_MSGPACK=true to block now, or add to allowed_msgpack_modules to allow explicitly: [('__main__', 'Analyst')]
+2026-09-19 14:35:28 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:37:26 | INFO     | research_agent | Token usage | generate_analysts    | input=175    output=326    total=501   
+2026-09-19 14:37:26 | INFO     | research_agent | Generated 3 analyst persona(s).
+2026-09-19 14:37:54 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:38:26 | INFO     | research_agent | Token usage | generate_question    | input=283    output=89     total=372   
+2026-09-19 14:38:34 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:39:13 | INFO     | research_agent | Token usage | generate_question    | input=279    output=109    total=388   
+2026-09-19 14:39:22 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:39:56 | INFO     | research_agent | Token usage | generate_question    | input=278    output=95     total=373   
+2026-09-19 14:40:04 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:40:05 | INFO     | research_agent | Token usage | search_query:wiki    | input=200    output=3      total=203   
+2026-09-19 14:40:05 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-19 14:40:05 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:40:06 | INFO     | research_agent | Token usage | search_query:social  | input=200    output=3      total=203   
+2026-09-19 14:40:06 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-19 14:40:06 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:40:07 | INFO     | research_agent | Token usage | search_query:web     | input=200    output=3      total=203   
+2026-09-19 14:40:07 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-19 14:40:12 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:40:12 | INFO     | research_agent | Token usage | search_query:social  | input=220    output=3      total=223   
+2026-09-19 14:40:12 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-19 14:40:13 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:40:14 | INFO     | research_agent | Token usage | search_query:web     | input=220    output=3      total=223   
+2026-09-19 14:40:14 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-19 14:40:14 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:40:15 | INFO     | research_agent | Token usage | search_query:wiki    | input=220    output=3      total=223   
+2026-09-19 14:40:15 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-19 14:40:19 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:40:19 | INFO     | research_agent | Token usage | search_query:social  | input=206    output=3      total=209   
+2026-09-19 14:40:19 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-19 14:40:20 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:40:21 | INFO     | research_agent | Token usage | search_query:wiki    | input=206    output=3      total=209   
+2026-09-19 14:40:21 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-19 14:40:21 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:40:22 | INFO     | research_agent | Token usage | search_query:web     | input=206    output=3      total=209   
+2026-09-19 14:40:22 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-19 14:43:33 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:44:48 | INFO     | research_agent | Token usage | generate_answer      | input=3928   output=169    total=4097  
+2026-09-19 14:47:58 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:48:07 | INFO     | research_agent | Token usage | generate_answer      | input=3944   output=20     total=3964  
+2026-09-19 14:51:18 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:51:41 | INFO     | research_agent | Token usage | generate_answer      | input=3929   output=54     total=3983  
+2026-09-19 14:51:49 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:51:58 | INFO     | research_agent | Token usage | generate_question    | input=539    output=26     total=565   
+2026-09-19 14:52:00 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:52:00 | INFO     | research_agent | Token usage | generate_question    | input=406    output=1      total=407   
+2026-09-19 14:52:03 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:52:11 | INFO     | research_agent | Token usage | generate_question    | input=425    output=25     total=450   
+2026-09-19 14:52:24 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:52:32 | INFO     | research_agent | Token usage | search_query:social  | input=394    output=23     total=417   
+2026-09-19 14:52:32 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:52:40 | INFO     | research_agent | Token usage | search_query:wiki    | input=394    output=23     total=417   
+2026-09-19 14:52:41 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:52:42 | INFO     | research_agent | No Wikipedia context returned for query: 'BMW Group agentic AI initiatives privacy ethical guidelines governance frameworks transparency accountability'
+2026-09-19 14:52:49 | INFO     | research_agent | Token usage | search_query:web     | input=394    output=23     total=417   
+2026-09-19 14:52:55 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:53:01 | INFO     | research_agent | Token usage | search_query:social  | input=240    output=18     total=258   
+2026-09-19 14:53:01 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:53:08 | INFO     | research_agent | Token usage | search_query:web     | input=240    output=18     total=258   
+2026-09-19 14:53:08 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:53:15 | INFO     | research_agent | Token usage | search_query:wiki    | input=240    output=18     total=258   
+2026-09-19 14:53:22 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:53:29 | INFO     | research_agent | Token usage | search_query:social  | input=284    output=21     total=305   
+2026-09-19 14:53:30 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:53:37 | INFO     | research_agent | Token usage | search_query:wiki    | input=284    output=22     total=306   
+2026-09-19 14:53:38 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:53:39 | INFO     | research_agent | No Wikipedia context returned for query: 'BMW Group agentic AI in-car intelligent assistant enterprise AI platform initiatives'
+2026-09-19 14:53:45 | INFO     | research_agent | Token usage | search_query:web     | input=284    output=22     total=306   
+2026-09-19 14:55:18 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 14:56:19 | INFO     | research_agent | Token usage | generate_answer      | input=2050   output=153    total=2203  
+2026-09-19 14:57:52 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 15:00:36 | INFO     | research_agent | Token usage | generate_answer      | input=2050   output=408    total=2458  
+2026-09-19 15:02:10 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 15:04:39 | INFO     | research_agent | Token usage | generate_answer      | input=2050   output=370    total=2420  
+2026-09-19 15:06:12 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 15:09:13 | INFO     | research_agent | Token usage | write_section        | input=2050   output=450    total=2500  
+2026-09-19 15:10:46 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 15:14:52 | INFO     | research_agent | Token usage | write_section        | input=2050   output=608    total=2658  
+2026-09-19 15:16:26 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 15:19:32 | INFO     | research_agent | Token usage | write_section        | input=2050   output=466    total=2516  
+2026-09-19 15:20:49 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 15:21:40 | INFO     | research_agent | Token usage | write_introduction   | input=1705   output=132    total=1837  
+2026-09-19 15:21:41 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 15:22:35 | INFO     | research_agent | Token usage | write_conclusion     | input=1705   output=139    total=1844  
+2026-09-19 15:23:57 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-19 15:28:56 | INFO     | research_agent | Token usage | write_report         | input=1833   output=750    total=2583  
+2026-09-19 15:28:56 | INFO     | research_agent | Running interviews and drafting the report...
+2026-09-19 15:28:56 | INFO     | research_agent | Token usage TOTAL | calls=38 | input=36510 | output=4952 | total=41462
+2026-09-19 15:28:56 | INFO     | research_agent | Final report written to research_report.md
+2026-09-21 19:03:22 | INFO     | research_agent | Logging to file: research_agent.log
+2026-09-21 19:03:43 | INFO     | research_agent | CUDA available - using GPU: NVIDIA GeForce RTX 5050 Laptop GPU (CUDA 12.6)
+2026-09-21 19:03:57 | INFO     | research_agent | LANGSMITH_API_KEY loaded (starts with lsv2...)
+2026-09-21 19:03:59 | INFO     | research_agent | TAVILY_API_KEY loaded (starts with tvly...)
+2026-09-21 19:05:08 | INFO     | research_agent | Generating analyst panel for topic: Experienced software developer professionals (15 years and above) (with experience in web development) who are moving into Agentic AI, how do prospects look for them? Is the industry welcoming? Research should be about the German Job Market.
+2026-09-21 19:06:16 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:08:16 | INFO     | research_agent | Token usage | generate_analysts    | input=174    output=326    total=500   
+2026-09-21 19:08:16 | INFO     | research_agent | Generated 3 analyst persona(s).
+2026-09-21 19:10:22 | WARNING  | langgraph.checkpoint.serde.jsonplus | Deserializing unregistered type __main__.Analyst from checkpoint. This will be blocked in a future version. Set LANGGRAPH_STRICT_MSGPACK=true to block now, or add to allowed_msgpack_modules to allow explicitly: [('__main__', 'Analyst')]
+2026-09-21 19:10:33 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:13:01 | INFO     | research_agent | Token usage | generate_analysts    | input=190    output=383    total=573   
+2026-09-21 19:13:01 | INFO     | research_agent | Generated 3 analyst persona(s).
+2026-09-21 19:16:06 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:16:41 | INFO     | research_agent | Token usage | generate_question    | input=320    output=83     total=403   
+2026-09-21 19:16:51 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:17:35 | INFO     | research_agent | Token usage | generate_question    | input=317    output=112    total=429   
+2026-09-21 19:17:46 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:18:17 | INFO     | research_agent | Token usage | generate_question    | input=329    output=86     total=415   
+2026-09-21 19:18:26 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:18:34 | INFO     | research_agent | Token usage | search_query:web     | input=218    output=21     total=239   
+2026-09-21 19:18:34 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:18:42 | INFO     | research_agent | Token usage | search_query:social  | input=218    output=21     total=239   
+2026-09-21 19:18:42 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:18:49 | INFO     | research_agent | Token usage | search_query:wiki    | input=218    output=21     total=239   
+2026-09-21 19:18:50 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-21 19:18:51 | INFO     | research_agent | No Wikipedia context returned for query: 'experienced software developers web development agentic AI German job market opportunities challenges'
+2026-09-21 19:18:54 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:18:55 | INFO     | research_agent | Token usage | search_query:wiki    | input=247    output=3      total=250   
+2026-09-21 19:18:55 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-21 19:18:55 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:18:56 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-21 19:18:56 | INFO     | research_agent | Token usage | search_query:social  | input=247    output=3      total=250   
+2026-09-21 19:18:56 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-21 19:18:57 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:18:57 | INFO     | research_agent | Token usage | search_query:web     | input=247    output=3      total=250   
+2026-09-21 19:18:57 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-21 19:18:58 | INFO     | research_agent | No Wikipedia context returned for query: 'Experienced software developer professionals (15 years and above) (with experience in web'
+2026-09-21 19:19:01 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:19:02 | INFO     | research_agent | Token usage | search_query:social  | input=221    output=3      total=224   
+2026-09-21 19:19:02 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-21 19:19:02 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:19:03 | INFO     | research_agent | Token usage | search_query:web     | input=221    output=3      total=224   
+2026-09-21 19:19:03 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-21 19:19:04 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:19:04 | INFO     | research_agent | Token usage | search_query:wiki    | input=221    output=3      total=224   
+2026-09-21 19:19:04 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-21 19:19:11 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-21 19:19:12 | INFO     | research_agent | No Wikipedia context returned for query: 'Experienced software developer professionals (15 years and above) (with experience in web'
+2026-09-21 19:20:51 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:24:11 | INFO     | research_agent | Token usage | generate_answer      | input=2364   output=460    total=2824  
+2026-09-21 19:25:53 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:26:15 | INFO     | research_agent | Token usage | generate_answer      | input=2386   output=50     total=2436  
+2026-09-21 19:27:58 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:28:03 | INFO     | research_agent | Token usage | generate_answer      | input=2372   output=12     total=2384  
+2026-09-21 19:28:23 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:28:30 | INFO     | research_agent | Token usage | generate_question    | input=861    output=17     total=878   
+2026-09-21 19:28:33 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:28:41 | INFO     | research_agent | Token usage | generate_question    | input=477    output=21     total=498   
+2026-09-21 19:28:42 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:30:07 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:30:18 | INFO     | research_agent | Token usage | search_query:social  | input=693    output=24     total=717   
+2026-09-21 19:30:18 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:30:28 | INFO     | research_agent | Token usage | search_query:wiki    | input=693    output=24     total=717   
+2026-09-21 19:30:29 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:30:30 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-21 19:30:32 | INFO     | research_agent | No Wikipedia context returned for query: 'German job market prospects for experienced web developers transitioning to Agentic AI roles'
+2026-09-21 19:30:39 | INFO     | research_agent | Token usage | search_query:web     | input=693    output=24     total=717   
+2026-09-21 19:30:46 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:30:53 | INFO     | research_agent | Token usage | search_query:social  | input=317    output=19     total=336   
+2026-09-21 19:30:54 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:31:01 | INFO     | research_agent | Token usage | search_query:web     | input=317    output=19     total=336   
+2026-09-21 19:31:01 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:31:09 | INFO     | research_agent | Token usage | search_query:wiki    | input=317    output=19     total=336   
+2026-09-21 19:31:13 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-21 19:31:14 | INFO     | research_agent | No Wikipedia context returned for query: 'job prospects for experienced web developers transitioning to agentic AI in Germany'
+2026-09-21 19:32:39 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:38:54 | INFO     | research_agent | Token usage | generate_answer      | input=2050   output=853    total=2903  
+2026-09-21 19:40:23 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:41:15 | INFO     | research_agent | Token usage | generate_answer      | input=2050   output=119    total=2169  
+2026-09-21 19:42:43 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:48:26 | INFO     | research_agent | Token usage | write_section        | input=2050   output=786    total=2836  
+2026-09-21 19:49:56 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-21 19:53:36 | INFO     | research_agent | Token usage | write_section        | input=2050   output=506    total=2556  
+2026-09-22 13:01:00 | INFO     | research_agent | Logging to file: research_agent.log
+2026-09-22 13:01:10 | INFO     | research_agent | CUDA available - using GPU: NVIDIA GeForce RTX 5050 Laptop GPU (CUDA 12.6)
+2026-09-22 13:01:10 | INFO     | research_agent | LANGSMITH_API_KEY loaded (starts with lsv2...)
+2026-09-22 13:01:10 | INFO     | research_agent | TAVILY_API_KEY loaded (starts with tvly...)
+2026-09-22 13:01:11 | INFO     | research_agent | Generating analyst panel for topic: How is the German  job market for Agentic AI for experienced professionals over 15 years and what is the best time to search for a job for tthese professionals?
+2026-09-22 13:01:36 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:03:29 | INFO     | research_agent | Token usage | generate_analysts    | input=161    output=293    total=454   
+2026-09-22 13:03:29 | INFO     | research_agent | Generated 3 analyst persona(s).
+2026-09-22 13:08:01 | WARNING  | langgraph.checkpoint.serde.jsonplus | Deserializing unregistered type __main__.Analyst from checkpoint. This will be blocked in a future version. Set LANGGRAPH_STRICT_MSGPACK=true to block now, or add to allowed_msgpack_modules to allow explicitly: [('__main__', 'Analyst')]
+2026-09-22 13:08:05 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:10:29 | INFO     | research_agent | Token usage | generate_analysts    | input=187    output=388    total=575   
+2026-09-22 13:10:29 | INFO     | research_agent | Generated 3 analyst persona(s).
+2026-09-22 13:13:10 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:14:53 | INFO     | research_agent | Token usage | generate_analysts    | input=185    output=279    total=464   
+2026-09-22 13:14:53 | INFO     | research_agent | Generated 3 analyst persona(s).
+2026-09-22 13:16:03 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:16:43 | INFO     | research_agent | Token usage | generate_question    | input=276    output=108    total=384   
+2026-09-22 13:16:51 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:17:28 | INFO     | research_agent | Token usage | generate_question    | input=277    output=101    total=378   
+2026-09-22 13:17:36 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:18:19 | INFO     | research_agent | Token usage | generate_question    | input=273    output=117    total=390   
+2026-09-22 13:18:28 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:18:29 | INFO     | research_agent | Token usage | search_query:web     | input=231    output=3      total=234   
+2026-09-22 13:18:29 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-22 13:18:29 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:18:30 | INFO     | research_agent | Token usage | search_query:social  | input=231    output=3      total=234   
+2026-09-22 13:18:30 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-22 13:18:30 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:18:31 | INFO     | research_agent | Token usage | search_query:wiki    | input=231    output=3      total=234   
+2026-09-22 13:18:31 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-22 13:18:32 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-22 13:18:33 | INFO     | research_agent | No Wikipedia context returned for query: 'How is the German job market for Agentic AI for experienced professionals'
+2026-09-22 13:18:35 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:18:44 | INFO     | research_agent | Token usage | search_query:social  | input=224    output=25     total=249   
+2026-09-22 13:18:45 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:18:55 | INFO     | research_agent | Token usage | search_query:web     | input=224    output=27     total=251   
+2026-09-22 13:18:55 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:19:05 | INFO     | research_agent | Token usage | search_query:wiki    | input=224    output=27     total=251   
+2026-09-22 13:19:10 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:19:10 | INFO     | research_agent | Token usage | search_query:social  | input=240    output=3      total=243   
+2026-09-22 13:19:10 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-22 13:19:11 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:19:12 | INFO     | research_agent | Token usage | search_query:web     | input=240    output=3      total=243   
+2026-09-22 13:19:12 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-22 13:19:12 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:19:13 | INFO     | research_agent | Token usage | search_query:wiki    | input=240    output=3      total=243   
+2026-09-22 13:19:13 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-22 13:21:21 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:21:43 | INFO     | research_agent | Token usage | generate_answer      | input=2776   output=53     total=2829  
+2026-09-22 13:23:17 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:23:35 | INFO     | research_agent | Token usage | generate_answer      | input=2050   output=47     total=2097  
+2026-09-22 13:25:08 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:26:39 | INFO     | research_agent | Token usage | generate_answer      | input=2050   output=229    total=2279  
+2026-09-22 13:26:42 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:26:46 | INFO     | research_agent | Token usage | generate_question    | input=435    output=12     total=447   
+2026-09-22 13:26:48 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:26:48 | INFO     | research_agent | Token usage | generate_question    | input=423    output=1      total=424   
+2026-09-22 13:26:59 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:32:21 | INFO     | research_agent | Token usage | generate_question    | input=617    output=863    total=1480  
+2026-09-22 13:32:29 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:32:41 | INFO     | research_agent | Token usage | search_query:social  | input=295    output=33     total=328   
+2026-09-22 13:32:41 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:32:53 | INFO     | research_agent | Token usage | search_query:web     | input=295    output=33     total=328   
+2026-09-22 13:32:53 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:33:05 | INFO     | research_agent | Token usage | search_query:wiki    | input=295    output=33     total=328   
+2026-09-22 13:33:11 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:33:13 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-22 13:33:14 | INFO     | research_agent | Token usage | search_query:social  | input=270    output=8      total=278   
+2026-09-22 13:33:14 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-22 13:33:14 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:33:15 | INFO     | research_agent | No Wikipedia context returned for query: 'German job market for Agentic AI experienced professionals over 15 years, best time to search for jobs'
+2026-09-22 13:33:17 | INFO     | research_agent | Token usage | search_query:wiki    | input=270    output=8      total=278   
+2026-09-22 13:33:17 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-22 13:33:17 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:33:18 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-22 13:33:20 | INFO     | research_agent | Token usage | search_query:web     | input=270    output=8      total=278   
+2026-09-22 13:33:20 | WARNING  | research_agent | Search query generation failed (Empty or null search_query returned); using fallback.
+2026-09-22 13:33:20 | INFO     | research_agent | No Wikipedia context returned for query: 'How is the German job market for Agentic AI for experienced professionals'
+2026-09-22 13:34:14 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:34:28 | INFO     | research_agent | Token usage | search_query:web     | input=1330   output=38     total=1368  
+2026-09-22 13:34:28 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:34:43 | INFO     | research_agent | Token usage | search_query:wiki    | input=1330   output=38     total=1368  
+2026-09-22 13:34:43 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-09-22 13:34:44 | WARNING  | research_agent | Wikipedia fetch failed: Expecting value: line 1 column 1 (char 0)
+2026-09-22 13:34:46 | INFO     | research_agent | No Wikipedia context returned for query: 'job market for experienced professionals in agentic AI in Germany, best time to search for jobs, companies hiring in agentic AI sector in Germany'
+2026-09-22 13:34:57 | INFO     | research_agent | Token usage | search_query:social  | input=1330   output=38     total=1368  
+2026-09-22 13:36:31 | INFO     | httpx | HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"

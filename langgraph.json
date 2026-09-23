@@ -1,0 +1,8 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "research_assistant": "./main.py:graph",
+    "interview_subgraph": "./main.py:interview_graph"
+  },
+  "env": ".env"
+}

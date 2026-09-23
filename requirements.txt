@@ -1,0 +1,17 @@
+langgraph
+langchain-core
+langchain-ollama
+torch
+numpy
+torchvision
+#pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126 --force-reinstall --no-cache-dir
+python-dotenv
+langchain-tavily
+langchain-community
+wikipedia
+langsmith
+pydantic
+typing-extensions
+#Install for langgraph studio
+langgraph-cli[inem] #langgraph command line interface
+langgraph-api
