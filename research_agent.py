@@ -557,7 +557,7 @@ class ResearchAssistant:
             return None
 
         return parsed
-    
+        
     def log_token_summary(self) -> None:
         """Log total input/output/total token counts for the whole run."""
         self.token_tracker.log_summary()
@@ -644,11 +644,29 @@ class ResearchAssistant:
             result = self._invoke_structured(
                 SearchQuery, instructions + state["messages"] + [SEARCH_REQUEST], call_label=call_label
             )
-            raw_query = getattr(result, "search_query", None)
-            query = raw_query.strip() if raw_query else ""
-            if not query:
-                raise ValueError("Empty or null search_query returned")
-            return query
+            logger.error(
+                "Structured result type: %s",
+                type(result).__name__,
+            )
+
+            if isinstance(result, dict):
+                logger.error(
+                    "Parsed result available: %s",
+                    result.get("parsed") is not None,
+                )
+                logger.error(
+                    "Parsing error: %r",
+                    result.get("parsing_error"),
+                )
+                logger.error(
+                    "Raw response type: %s",
+                    type(result.get("raw")).__name__,
+                )
+                raw_query = getattr(result, "search_query", None)
+                query = raw_query.strip() if raw_query else ""
+                if not query:
+                    raise ValueError("Empty or null search_query returned")
+                return query
         except (OutputParserException, ValueError, Exception) as exc:
             logger.warning("Search query generation failed (%s); using fallback.", exc)
             return self._fallback_search_query(state)
