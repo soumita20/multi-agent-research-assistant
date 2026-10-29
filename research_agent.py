@@ -498,27 +498,65 @@ class ResearchAssistant:
 
     @traceable(name="invoke_structured", run_type="tool")
     def _invoke_structured(self, schema: type, messages: list, call_label: str):
-        """
-        Structured-output LLM call. ``with_structured_output`` normally
-        returns only the parsed Pydantic object and discards the raw
-        AIMessage (and with it, token usage metadata) - requesting the raw
-        response alongside the parsed one lets us track usage for these
-        calls too. Returns the parsed object (or None on a parsing error,
-        same as the caller would see without this wrapper).
-        """
-        structured_llm = self.llm.with_structured_output(schema, include_raw=True)
+        """Invoke a structured LLM call and log parsing failures safely."""
+        structured_llm = self.llm.with_structured_output(
+            schema,
+            include_raw=True,
+        )
+
         result = structured_llm.invoke(messages)
-        raw = result.get("raw") if isinstance(result, dict) else None
-        parsed = result.get("parsed") if isinstance(result, dict) else result
+
+        if not isinstance(result, dict):
+            logger.warning(
+                "Unexpected structured-output result for %s: %s",
+                call_label,
+                type(result).__name__,
+            )
+            return result if isinstance(result, schema) else None
+
+        raw = result.get("raw")
+        parsed = result.get("parsed")
+        parsing_error = result.get("parsing_error")
+
         if raw is not None:
             self.token_tracker.record(call_label, raw)
-        if parsed is not None and not isinstance(parsed, schema):
+
+        if parsing_error is not None:
+            logger.error(
+                "Structured-output parsing failed | call=%s | error_type=%s | error=%s",
+                call_label,
+                type(parsing_error).__name__,
+                str(parsing_error)[:1000],
+            )
+
+            # Log a limited excerpt, not credentials or the full prompt.
+            raw_content = getattr(raw, "content", None)
+            if isinstance(raw_content, str):
+                logger.error(
+                    "Raw model response excerpt for %s: %s",
+                    call_label,
+                    raw_content[:2000],
+                )
+            elif raw_content is not None:
+                logger.error(
+                    "Raw model response type for %s: %s",
+                    call_label,
+                    type(raw_content).__name__,
+                )
+
+        if parsed is None:
+            return None
+
+        if not isinstance(parsed, schema):
             logger.warning(
                 "Structured output for %s was %s, expected %s",
-                call_label, type(parsed).__name__, schema.__name__,
+                call_label,
+                type(parsed).__name__,
+                schema.__name__,
             )
-            return None
-        return parsed
+        return None
+
+    return parsed
 
     def log_token_summary(self) -> None:
         """Log total input/output/total token counts for the whole run."""
