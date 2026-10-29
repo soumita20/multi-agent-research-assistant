@@ -495,7 +495,7 @@ class ResearchAssistant:
         response = self.llm.invoke(messages)
         self.token_tracker.record(call_label, response)
         return response
-
+    
     @traceable(name="invoke_structured", run_type="tool")
     def _invoke_structured(self, schema: type, messages: list, call_label: str):
         """Invoke a structured LLM call and log parsing failures safely."""
@@ -554,10 +554,10 @@ class ResearchAssistant:
                 type(parsed).__name__,
                 schema.__name__,
             )
-        return None
+            return None
 
-    return parsed
-
+        return parsed
+    
     def log_token_summary(self) -> None:
         """Log total input/output/total token counts for the whole run."""
         self.token_tracker.log_summary()
