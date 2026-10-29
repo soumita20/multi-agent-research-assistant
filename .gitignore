@@ -2,3 +2,4 @@ research-agent.ipynb
 .venv/
 .env
 _pycache__/
+.streamlit/secrets.toml
