@@ -22,11 +22,6 @@ st.caption(
     "human feedback, research interviews, and report synthesis."
 )
 
-
-# ---------------------------------------------------------
-# Configuration helpers
-# ---------------------------------------------------------
-
 def get_setting(name: str, default: str = "") -> str:
     """Read configuration from environment or Streamlit secrets."""
     value = os.getenv(name)
@@ -99,10 +94,7 @@ def configure_ollama():
 
     return mode, base_url, model
 
-
-# ---------------------------------------------------------
 # Session state
-# ---------------------------------------------------------
 
 def initialise_state():
     defaults = {
@@ -171,10 +163,7 @@ def display_analysts(analysts):
                 f"{details.get('description', 'Not specified')}"
             )
 
-
-# ---------------------------------------------------------
 # Workflow operations
-# ---------------------------------------------------------
 
 def generate_analysts(topic: str, max_analysts: int):
     mode, base_url, model = configure_ollama()
@@ -274,10 +263,7 @@ def execute_research():
         st.session_state.error = str(exc)
         st.session_state.stage = "research_error"
 
-
-# ---------------------------------------------------------
 # Sidebar: inference configuration
-# ---------------------------------------------------------
 
 initialise_state()
 
@@ -301,10 +287,7 @@ with st.sidebar:
         "same machine as Streamlit."
     )
 
-
-# ---------------------------------------------------------
 # Stage 1: Topic and analyst count
-# ---------------------------------------------------------
 
 if st.session_state.stage == "input":
     st.subheader("Start a research project")
@@ -349,10 +332,7 @@ if st.session_state.stage == "input":
             except Exception as exc:
                 st.session_state.error = str(exc)
 
-
-# ---------------------------------------------------------
 # Stage 2: Analyst review and human feedback
-# ---------------------------------------------------------
 
 if st.session_state.stage in (
     "feedback_choice",
@@ -432,9 +412,7 @@ if st.session_state.stage in (
                 except Exception as exc:
                     st.session_state.error = str(exc)
 
-# ---------------------------------------------------------
 # Stage 3: Research progress
-# ---------------------------------------------------------
 
 if st.session_state.stage == "researching":
     st.header("Research in progress")
@@ -443,9 +421,7 @@ if st.session_state.stage == "researching":
 
     execute_research()
 
-# ---------------------------------------------------------
 # Research error and retry
-# ---------------------------------------------------------
 
 if st.session_state.stage == "research_error":
     st.error(
@@ -457,10 +433,7 @@ if st.session_state.stage == "research_error":
         st.session_state.stage = "researching"
         st.rerun()
 
-
-# ---------------------------------------------------------
 # Stage 4: Display errors
-# ---------------------------------------------------------
 
 if (
     st.session_state.error
@@ -468,10 +441,7 @@ if (
 ):
     st.error(st.session_state.error)
 
-
-# ---------------------------------------------------------
 # Stage 5: Final report and download
-# ---------------------------------------------------------
 
 if st.session_state.stage == "complete":
     st.divider()
