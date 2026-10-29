@@ -1,10 +1,14 @@
+--extra-index-url https://download.pytorch.org/whl/nightly/cu128
+--pre
+torch
+torchvision
+torchaudio
+
 langgraph
 langchain-core
 langchain-ollama
-torch
 numpy
-torchvision
-#pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126 --force-reinstall --no-cache-dir
+#pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128 --force-reinstall --no-cache-dir
 python-dotenv
 langchain-tavily
 langchain-community
@@ -15,3 +19,12 @@ typing-extensions
 #Install for langgraph studio
 langgraph-cli[inem] #langgraph command line interface
 langgraph-api
+streamlit
+langchain-openai
+langchain-core
+langchain-community
+langchain-tavily
+langgraph
+pydantic
+typing-extensions
+python-dotenv

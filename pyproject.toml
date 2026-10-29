@@ -1,0 +1,36 @@
+[project]
+name = "multi-agent-research-assistant"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "colorama>=0.4.6",
+    "langchain-community>=0.4.2",
+    "langchain-core>=1.6.7",
+    "langchain-ollama>=1.1.0",
+    "langchain-tavily>=0.2.18",
+    "langgraph>=1.2.14",
+    "langgraph-api>=0.16.0",
+    "langgraph-cli[inem,inmem]>=0.4.32",
+    "langsmith>=0.14.4",
+    "numpy>=2.5.3",
+    "pydantic>=2.13.5",
+    "python-dotenv>=1.2.4",
+    "torch",
+    "torchaudio",
+    "torchvision",
+    "typing-extensions>=4.16.0",
+    "wikipedia>=1.4.0",
+]
+
+[tool.uv]
+environments = ["sys_platform == 'win32'"]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+torchvision = { index = "pytorch-cu128" }
+torchaudio = { index = "pytorch-cu128" }

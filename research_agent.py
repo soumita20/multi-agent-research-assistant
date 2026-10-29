@@ -14,6 +14,7 @@ Pipeline
 3. Each interview is condensed into a report section.
 4. All sections are merged (map-reduce, via LangGraph's ``Send`` API) into a
    final report with an introduction, body, and conclusion.
+5. Report file name (optional): the user can type a file name after the report is generated. Pressing Enter accepts the name built from the topic. Not asked when --output or --non-interactive is used.
 
 Usage
 -----
@@ -37,7 +38,9 @@ import argparse
 import getpass
 import logging
 import operator
+import functools
 import os
+import re
 from dataclasses import dataclass, field
 from typing import Annotated, Any, List, Optional
 
@@ -58,7 +61,19 @@ from langgraph.types import Send
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
 
+from langsmith import traceable
+
 logger = logging.getLogger("research_agent")
+
+def log_node_errors(fn):
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except Exception:
+            logger.exception("Node %s failed", fn.__name__)
+            raise
+    return wrapper
 
 
 #Configuration
@@ -70,7 +85,8 @@ class AppConfig:
     topic: str
     max_analysts: int = 3
     max_interview_turns: int = 2
-    model_name: str = "qwen2.5:14b"
+    model_name: str = os.getenv("OLLAMA_MODEL", "qwen2.5:14b")
+    base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     temperature: float = 0.0
     tavily_max_results: int = 3
     thread_id: str = "1"
@@ -165,7 +181,7 @@ class Perspectives(BaseModel):
 class SearchQuery(BaseModel):
     search_query: Optional[str] = Field(
         default=None,
-        description="A well-structured search query for retrieval. Must be a plain string.",
+        description="A well-structured search query for retrieval. Must be a non-empty plain string.",
     )
 
 
@@ -194,14 +210,16 @@ class TokenTracker:
     @staticmethod
     def _extract_usage(response: Any) -> Optional[TokenUsage]:
         usage = getattr(response, "usage_metadata", None)
-        if usage:
+        if isinstance(usage, dict) and usage:
             return TokenUsage(
                 input_tokens=usage.get("input_tokens", 0) or 0,
                 output_tokens=usage.get("output_tokens", 0) or 0,
                 total_tokens=usage.get("total_tokens", 0) or 0,
             )
 
-        meta = getattr(response, "response_metadata", None) or {}
+        meta = getattr(response, "response_metadata", None)
+        if not isinstance(meta, dict):
+            return None
         prompt_tokens = meta.get("prompt_eval_count")
         completion_tokens = meta.get("eval_count")
         if prompt_tokens is not None or completion_tokens is not None:
@@ -309,6 +327,17 @@ Your goal is to generate a well-structured query for use in retrieval and / or w
 First analyze the full conversation.
 Pay particular attention to the final question posed by the analyst.
 Convert this final question into a well structured web search query."""
+)
+
+WIKI_SEARCH_INSTRUCTIONS = SystemMessage(
+    content="""You will be given a conversation between an analyst and an expert.
+Return the name of ONE Wikipedia article that best matches the analyst's final question.
+Use 2 to 4 words. Examples: "Artificial intelligence", "Economy of Germany", "Software engineering".
+Do not return a sentence or a question."""
+)
+
+SEARCH_REQUEST = HumanMessage(
+    content="Write the search query for the analyst's final question now."
 )
 
 ANSWER_INSTRUCTIONS = """You are an expert being interviewed by an analyst.
@@ -427,7 +456,6 @@ Here are the sections to reflect on for writing: {formatted_str_sections}"""
 
 INTERVIEW_CLOSING_LINE = "Thank you so much for your time and insights. I really appreciate it."
 
-
 #Construction of the graph
 
 class ResearchAssistant:
@@ -444,12 +472,15 @@ class ResearchAssistant:
         max_interview_turns: int = 2,
         checkpointer: Optional[MemorySaver] = None,
         social_domains: Optional[List[str]] = None,
-        enable_social_search: bool = True
+        enable_social_search: bool = True,
+        use_checkpointer: bool = True,
+        save_to_disk: bool = False
     ) -> None:
         self.llm = llm
         self.search_tool = search_tool
         self.max_interview_turns = max_interview_turns
-        self.checkpointer = checkpointer or MemorySaver()
+        self.checkpointer = checkpointer or MemorySaver() if use_checkpointer else None
+        self.save_to_disk = save_to_disk
         self.token_tracker = TokenTracker()
         self.social_domains = list(social_domains or []) if enable_social_search else []
 
@@ -457,13 +488,15 @@ class ResearchAssistant:
         self.graph = self._build_research_graph()
 
     # LLM Call helpers
-
+    
+    @traceable(name="invoke_llm", run_type="tool")
     def _invoke(self, messages: list, call_label: str):
         """Plain (non-structured) LLM call, with token usage recorded."""
         response = self.llm.invoke(messages)
         self.token_tracker.record(call_label, response)
         return response
 
+    @traceable(name="invoke_structured", run_type="tool")
     def _invoke_structured(self, schema: type, messages: list, call_label: str):
         """
         Structured-output LLM call. ``with_structured_output`` normally
@@ -479,6 +512,12 @@ class ResearchAssistant:
         parsed = result.get("parsed") if isinstance(result, dict) else result
         if raw is not None:
             self.token_tracker.record(call_label, raw)
+        if parsed is not None and not isinstance(parsed, schema):
+            logger.warning(
+                "Structured output for %s was %s, expected %s",
+                call_label, type(parsed).__name__, schema.__name__,
+            )
+            return None
         return parsed
 
     def log_token_summary(self) -> None:
@@ -486,7 +525,9 @@ class ResearchAssistant:
         self.token_tracker.log_summary()
 
     # Generate analysts and ask human feedback
-
+    
+    @traceable(name="generate_analysts", run_type="tool")
+    @log_node_errors
     def _generate_analysts(self, state: ResearchGraphState) -> dict:
         """Generate a panel of analyst personas for the given topic."""
         topic = state["topic"]
@@ -508,7 +549,7 @@ class ResearchAssistant:
             raise ValueError("Analyst generation returned no parsed result (structured-output parsing error).")
 
         logger.info("Generated %d analyst persona(s).", len(result.analysts))
-        return {"analysts": result.analysts}
+        return {"analysts": result.analysts, "human_analyst_feedback": None}
 
     @staticmethod
     def _human_feedback(state: ResearchGraphState) -> None:
@@ -516,6 +557,7 @@ class ResearchAssistant:
         return None
 
     @staticmethod
+    @traceable(name="route_after_feedback", run_type="tool")
     def _route_after_feedback(state: ResearchGraphState):
         """Regenerate analysts on feedback, otherwise fan out interviews."""
         human_analyst_feedback = state.get("human_analyst_feedback")
@@ -539,6 +581,7 @@ class ResearchAssistant:
 
     # Interview sub graphs
 
+    @traceable(name="generate_question", run_type="tool")
     def _generate_question(self, state: InterviewState) -> dict:
         """The analyst asks the next interview question."""
         analyst = state["analyst"]
@@ -549,7 +592,8 @@ class ResearchAssistant:
         )
         return {"messages": [question]}
 
-    def _resolve_search_query(self, state: InterviewState, call_label: str) -> str:
+    @traceable(name="resolve_search_query", run_type="tool")
+    def _resolve_search_query(self, state: InterviewState, call_label: str, instructions: SystemMessage = SEARCH_INSTRUCTIONS) -> str:
         """
         Ask the LLM for a structured search query. If that fails or returns
         empty/null, fall back to the analyst's focus-area description (free
@@ -560,7 +604,7 @@ class ResearchAssistant:
         """
         try:
             result = self._invoke_structured(
-                SearchQuery, [SEARCH_INSTRUCTIONS] + state["messages"], call_label=call_label
+                SearchQuery, instructions + state["messages"] + [SEARCH_REQUEST], call_label=call_label
             )
             raw_query = getattr(result, "search_query", None)
             query = raw_query.strip() if raw_query else ""
@@ -593,21 +637,23 @@ class ResearchAssistant:
            phrase rather than prose.
         2. The analyst's focus-area description, truncated to a short
            phrase - a bio paragraph is not itself a search query.
-        3. A short excerpt of the last message, as a last resort.
+        3. No-LLM fallback. Never uses analyst names or bios.
+        4. The analyst's last question.
+        5. The research topic.
+
         """
-        topic = state.get("interview_topic")
-        if topic:
-            return self._truncate(topic, max_words)
+        for message in reversed(state.get("messages") or []):
+            content = message.content
+            if isinstance(message, AIMessage) and isinstance(content, str):
+                questions = re.findall(r"[^.?!\n]*\?", content)
+                if questions:
+                    return " ".join(questions[-1].split()[:max_words])
+                break
+        topic = state.get("interview_topic") or ""
+        return " ".join(topic.split()[:max_words])
 
-        analyst = state.get("analyst")
-        if analyst is not None and getattr(analyst, "description", None):
-            return self._truncate(analyst.description, max_words)
-
-        last_content = state["messages"][-1].content if state.get("messages") else ""
-        if not isinstance(last_content, str):
-            return ""
-        return self._truncate(last_content, max_words)
-
+    @traceable(name="search_web", run_type="tool")
+    @log_node_errors
     def _search_web(self, state: InterviewState) -> dict:
         """Fetch web-search context for the current interview turn via Tavily."""
         if not state.get("messages"):
@@ -619,18 +665,21 @@ class ResearchAssistant:
 
         try:
             data = self.search_tool.invoke({"query": query})
-            search_docs = data.get("results", data) if isinstance(data, dict) else data
+            search_docs = self._extract_results(data, "web search")
         except Exception as exc:
             logger.warning("Tavily search failed: %s", exc)
             return {"context": [f"Web search failed for query '{query}'."]}
 
         formatted_docs = "\n\n---\n\n".join(
-            f'<Document href="{doc.get("url", "")}"/>\n{doc.get("content", "")}\n</Document>'
-            for doc in search_docs
-        )
+        f'<Document href="{doc.get("url", "")}"/>\n{doc.get("content", "")}\n</Document>'
+        for doc in search_docs
+        if isinstance(doc, dict))
+
         return {"context": [formatted_docs]}
 
     @staticmethod
+    @traceable(name="diagnose_wikipedia_failure", run_type="tool")
+    @log_node_errors
     def _diagnose_wikipedia_failure(query: str, exc: Exception) -> None:
         """
         Best-effort root-cause probe for a WikipediaLoader failure. Calls the
@@ -682,9 +731,11 @@ class ResearchAssistant:
         except Exception as probe_exc:
             logger.debug("Diagnostic probe itself failed: %s", probe_exc)
 
+    @traceable(name="search_wikipedia", run_type="tool")
+    @log_node_errors
     def _search_wikipedia(self, state: InterviewState) -> dict:
         """Fetch Wikipedia context for the current interview turn."""
-        query = self._resolve_search_query(state, call_label="search_query:wiki")
+        query = self._resolve_search_query(state, call_label="search_query:wiki", instructions=WIKI_SEARCH_INSTRUCTIONS)
         logger.debug("Wikipedia query resolved to: %r", query)
 
         try:
@@ -700,9 +751,12 @@ class ResearchAssistant:
         formatted_docs = "\n\n---\n\n".join(
             f'<Document href="{doc.metadata.get("source", "")}"/>\n{doc.page_content}\n</Document>'
             for doc in search_docs
+            if hasattr(doc, "page_content") and isinstance(getattr(doc, "metadata", None), dict)
         )
         return {"context": [formatted_docs]}
 
+    @traceable(name="search_social", run_type="tool")
+    @log_node_errors
     def _search_social(self, state: InterviewState) -> dict:
         """
         Fetch context from public, search-engine-indexed pages on employee
@@ -723,7 +777,7 @@ class ResearchAssistant:
  
         try:
             data = self.search_tool.invoke({"query": query, "include_domains": self.social_domains})
-            search_docs = data.get("results", data) if isinstance(data, dict) else data
+            search_docs = self._extract_results(data, "social search")
         except Exception as exc:
             logger.warning("Social-platform search failed: %s", exc)
             return {"context": [f"Social-platform search failed for query '{query}'."]}
@@ -736,9 +790,12 @@ class ResearchAssistant:
         formatted_docs = "\n\n---\n\n".join(
             f'<Document href="{doc.get("url", "")}"/>\n{doc.get("content", "")}\n</Document>'
             for doc in search_docs
+            if isinstance(doc, dict)
         )
         return {"context": [formatted_docs]}
 
+    @traceable(name="generate_answer", run_type="tool")
+    @log_node_errors
     def _generate_answer(self, state: InterviewState) -> dict:
         """The expert answers the analyst's latest question using gathered context."""
         analyst = state["analyst"]
@@ -753,10 +810,18 @@ class ResearchAssistant:
         return {"messages": [answer]}
 
     @staticmethod
+    @traceable(name="save_interview", run_type="tool")
     def _save_interview(state: InterviewState) -> dict:
         """Flatten the message history into a plain-text transcript."""
         return {"interview": get_buffer_string(state["messages"])}
 
+    @traceable(name="save_report_node", run_type="tool")
+    def _save_report_node(self, state: ResearchGraphState) -> dict:
+        path = resolve_output_path(state["topic"])
+        save_report(state["final_report"], path)
+        return {}
+
+    @traceable(name="route_messages", run_type="tool")
     def _route_messages(self, state: InterviewState, name: str = "Expert"):
         """Decide whether to continue the interview or wrap it up."""
         messages = state["messages"]
@@ -772,6 +837,8 @@ class ResearchAssistant:
             return "save_interview"
         return "ask_question"
 
+    @traceable(name="write_section", run_type="tool")
+    @log_node_errors
     def _write_section(self, state: InterviewState) -> dict:
         """Condense the interview context into a report section."""
         context = state["context"]
@@ -821,7 +888,8 @@ class ResearchAssistant:
         )
 
     # Report writing
-
+    @traceable(name="write_report", run_type="tool")
+    @log_node_errors
     def _write_report(self, state: ResearchGraphState) -> dict:
         sections = state["sections"]
         topic = state["topic"]
@@ -834,7 +902,8 @@ class ResearchAssistant:
             call_label="write_report",
         )
         return {"content": report.content}
-
+    
+    @traceable(name="write_introduction", run_type="tool")
     def _write_introduction(self, state: ResearchGraphState) -> dict:
         formatted_sections = "\n\n".join(state["sections"])
         instructions = INTRO_CONCLUSION_INSTRUCTIONS.format(
@@ -846,7 +915,8 @@ class ResearchAssistant:
             call_label="write_introduction",
         )
         return {"introduction": intro.content}
-
+    
+    @traceable(name="write_conclusion", run_type="tool")
     def _write_conclusion(self, state: ResearchGraphState) -> dict:
         formatted_sections = "\n\n".join(state["sections"])
         instructions = INTRO_CONCLUSION_INSTRUCTIONS.format(
@@ -860,6 +930,7 @@ class ResearchAssistant:
         return {"conclusion": conclusion.content}
 
     @staticmethod
+    @traceable(name="finalize_report", run_type="tool")
     def _finalize_report(state: ResearchGraphState) -> dict:
         """Reduce step: stitch introduction + body + conclusion together."""
         content = state["content"]
@@ -902,10 +973,16 @@ class ResearchAssistant:
         builder.add_edge(
             ["write_conclusion", "write_report", "write_introduction"], "finalize_report"
         )
-        builder.add_edge("finalize_report", END)
+        if self.save_to_disk:
+            builder.add_node("save_report", self._save_report_node)
+            builder.add_edge("finalize_report", "save_report")
+            builder.add_edge("save_report", END)
+        else:
+            builder.add_edge("finalize_report", END)
 
         return builder.compile(interrupt_before=["human_feedback"], checkpointer=self.checkpointer)
-
+    
+    @traceable(name="start_graph", run_type="tool")
     def start(self, topic: str, max_analysts: int, thread_id: str) -> List[Analyst]:
         """Run upto the first human-feedback interrupt."""
         thread = {"configurable": {"thread_id": thread_id}}
@@ -917,6 +994,7 @@ class ResearchAssistant:
                 analysts = event["analysts"]
         return analysts
 
+    @traceable(name="submit_feedback", run_type="tool")
     def submit_feedback(self, thread_id: str, feedback: Optional[str]) -> List[Analyst]:
         """Apply human feedback (or None to proceed) and resume until the
         next interrupt or run completion."""
@@ -924,12 +1002,38 @@ class ResearchAssistant:
         self.graph.update_state(
             thread, {"human_analyst_feedback": feedback}, as_node="human_feedback"
         )
+        if not feedback:
+            return []  # No feedback = proceed straight through to interviews
+            
         analysts: List[Analyst] = []
         for event in self.graph.stream(None, thread, stream_mode="values"):
             if event.get("analysts"):
                 analysts = event["analysts"]
         return analysts
 
+    
+    @staticmethod
+    @traceable(name="extract_results", run_type="tool")
+    def _extract_results(data: Any, label: str) -> list:
+        """Return a clean list of result dicts from a Tavily response."""
+        if isinstance(data, dict):
+            if data.get("error"):
+                logger.warning("%s returned an error: %s", label, data["error"])
+                return []
+            results = data.get("results", [])
+        elif isinstance(data, list):
+            results = data
+        elif isinstance(data, str):
+            logger.info("%s returned no results: %s", label, data[:120])
+            return []
+        else:
+            logger.warning("%s returned unexpected type %s: %r",
+                        label, type(data).__name__, str(data)[:200])
+            return []
+
+        return [r for r in results if isinstance(r, dict)]
+
+    @traceable(name="run_to_completion", run_type="tool")
     def run_to_completion(self, thread_id: str) -> str:
         """Resume execution (after feedback has been finalized) through to
         the final report, logging node transitions as they happen."""
@@ -957,8 +1061,9 @@ def collect_human_feedback() -> Optional[str]:
     ).strip()
     return feedback or None
 
-
+@traceable(name="save_report", run_type="tool")
 def save_report(report: str, output_path: str) -> None:
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(report)
     logger.info("Final report written to %s", output_path)
@@ -966,7 +1071,12 @@ def save_report(report: str, output_path: str) -> None:
 
 def build_assistant(config: AppConfig) -> ResearchAssistant:
     """Construct the LLM, search tool, and assistant from config."""
-    llm = ChatOllama(model=config.model_name, temperature=config.temperature)
+    #llm = ChatOllama(model=config.model_name, temperature=config.temperature)
+    llm = ChatOllama(
+        model=config.model_name,
+        base_url=config.base_url,
+        temperature=config.temperature,
+    )
     search_tool = TavilySearch(max_results=config.tavily_max_results)
     return ResearchAssistant(
         llm=llm,
@@ -1043,6 +1153,48 @@ def parse_args() -> AppConfig:
         verbose=args.verbose,
     )
 
+def slugify_topic(topic: str, max_len: int = 60) -> str:
+    """Turn a topic into a safe file name stem (works on Windows too)."""
+    slug = re.sub(r"[^\w\s-]", "", topic, flags=re.UNICODE).strip().lower()
+    slug = re.sub(r"[\s_-]+", "-", slug)
+    if len(slug) > max_len:
+        slug = slug[:max_len].rsplit("-", 1)[0]  # cut at a word boundary
+    return slug.strip("-") or "research-report"
+
+def resolve_output_path(topic: str, output_path: Optional[str] = None) -> str:
+    """Use the explicit path if given. Otherwise build one from the topic,
+    adding -2, -3, ... so an earlier report is never overwritten."""
+    if output_path:
+        return output_path
+    base = slugify_topic(topic)
+    path = os.path.join("reports", f"{base}.md")
+    counter = 2
+    while os.path.exists(path):
+        path = os.path.join("reports", f"{base}-{counter}.md")
+        counter += 1
+    return path
+
+def prompt_for_filename(default_path: str) -> str:
+    """Offer the default file name. Enter accepts it."""
+    answer = input(
+        f"\nSave report as [{default_path}] (type a name, or press Enter to accept): "
+    ).strip()
+    if not answer:
+        return default_path
+
+    # Keep only the name the user typed, make it safe, and force .md
+    stem = answer[:-3] if answer.lower().endswith(".md") else answer
+    stem = slugify_topic(stem)
+    path = f"{stem}.md"
+
+    # Do not overwrite an existing file by accident
+    counter = 2
+    while os.path.exists(path):
+        path = f"{stem}-{counter}.md"
+        counter += 1
+    return path
+
+@traceable(name="elisa")
 def main() -> None:
     config = parse_args()
     configure_logging(verbose=config.verbose, log_file=config.log_file)
@@ -1073,7 +1225,10 @@ def main() -> None:
         logger.error("No final report was produced.")
         return
 
-    save_report(report, config.output_path)
+    output_path = resolve_output_path(config.topic, config.output_path)
+    if config.interactive_feedback and not config.output_path:
+        output_path = prompt_for_filename(output_path)
+    save_report(report, output_path)
     print("\n" + "=" * 80)
     print(report)
     print("=" * 80)

@@ -1,8 +1,8 @@
 {
   "dependencies": ["."],
   "graphs": {
-    "research_assistant": "./main.py:graph",
-    "interview_subgraph": "./main.py:interview_graph"
+    "research_assistant": "./studio_graph.py:graph"
   },
-  "env": ".env"
+  "env": ".env",
+  "python_version": "3.14"
 }
