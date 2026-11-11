@@ -488,9 +488,22 @@ MAX_INTERVIEW_TURNS=2
 TAVILY_MAX_RESULTS=3
 ```
 
-For optional Groq hosted inference, set `LLM_PROVIDER=groq` and provide a Groq
-API key. The default Groq model is `openai/gpt-oss-20b`; override it with
-`GROQ_MODEL` if needed:
+The Streamlit sidebar lets you choose a model family and then a model name from
+that family's catalog. These choices and the application defaults are loaded
+from [config.toml](config.toml), rather than maintained in the UI code. The
+topic form's Search button starts the research workflow. Groq and Gemini
+require their own API keys and offer free-tier usage subject to current quotas
+and model availability; provider usage beyond free limits may cost money. Check
+each provider's current terms before use. Ollama local inference has no model
+API charge, but requires you to supply compatible hardware.
+
+To add or change a model, edit the relevant provider's `models` list and
+`default_model` in `config.toml`. Model families use one of the provider
+adapters implemented by the application. API keys belong in `.env` or
+Streamlit secrets; they do not belong in `config.toml`.
+
+To use Groq, provide a Groq API key. You can override the model configured in
+`config.toml` through `GROQ_MODEL`:
 
 ```env
 LLM_PROVIDER=groq
@@ -498,6 +511,13 @@ GROQ_API_KEY=<your-groq-api-key>
 GROQ_MODEL=openai/gpt-oss-20b
 TAVILY_API_KEY=<your-tavily-api-key>
 ```
+
+To use Gemini, create an API key in Google AI Studio and add it as
+`GOOGLE_API_KEY` in `.env` or Streamlit secrets. `GOOGLE_MODEL` can override
+the configured default model.
+
+The optional LLM-as-a-judge evaluation uses the same model selected for the
+research run. Enable it with `ENABLE_LLM_JUDGE=true`.
 
 For Streamlit Community Cloud, add the selected provider settings and API keys
 to the app's Secrets. Ollama remains the default when `LLM_PROVIDER` is unset.
@@ -640,7 +660,20 @@ Using fewer analysts and interview turns is useful for validating the environmen
 
 ## Configuration
 
-The application supports configuration for:
+`config.toml` is the source of truth for UI text, runtime defaults, model
+families and IDs, provider key names, and the analyst/interview/report prompts.
+Edit the `providers` section to add, remove, relabel, or reorder model entries.
+Model families can use an existing provider adapter by setting its `driver`
+value. Adding support for a brand-new provider adapter still requires code and
+its dependency.
+
+Set `APP_CONFIG_FILE` to load a different TOML configuration file. API keys
+remain in environment variables, `.env`, or Streamlit secrets. Environment
+values such as `OLLAMA_MODEL`, `GROQ_MODEL`, `GOOGLE_MODEL`, `TEMPERATURE`,
+`MAX_INTERVIEW_TURNS`, and `TAVILY_MAX_RESULTS` override their configured
+defaults where applicable.
+
+Additional environment settings supported by the application include:
 
 ```text
 LLM_PROVIDER
@@ -649,6 +682,8 @@ OLLAMA_BASE_URL
 OLLAMA_MODEL
 GROQ_API_KEY
 GROQ_MODEL
+GOOGLE_API_KEY
+GOOGLE_MODEL
 TEMPERATURE
 MAX_INTERVIEW_TURNS
 TAVILY_MAX_RESULTS

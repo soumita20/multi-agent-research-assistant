@@ -47,6 +47,7 @@ from dataclasses import dataclass, field
 from typing import Annotated, Any, List, Optional
 
 from dotenv import load_dotenv
+from app_settings import PROJECT_SETTINGS, provider_for_driver
 from langchain_core.exceptions import OutputParserException
 from langchain_core.messages import (
     AIMessage,
@@ -56,6 +57,7 @@ from langchain_core.messages import (
 )
 from langchain_community.document_loaders import WikipediaLoader
 from langchain_groq import ChatGroq
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_ollama import ChatOllama
 from langchain_tavily import TavilySearch
 from langgraph.checkpoint.memory import MemorySaver
@@ -83,29 +85,61 @@ def log_node_errors(fn):
 
 #Configuration
 
+def _default_provider_settings() -> tuple[str, dict]:
+    runtime = PROJECT_SETTINGS["runtime"]
+    default_family = runtime["default_family"]
+    default_driver = PROJECT_SETTINGS["providers"][default_family]["driver"]
+    driver = os.getenv("LLM_PROVIDER", default_driver).lower().strip()
+    family = provider_for_driver(PROJECT_SETTINGS, driver) or default_family
+    return family, PROJECT_SETTINGS["providers"][family]
+
+
+def _default_model_name() -> str:
+    _, provider = _default_provider_settings()
+    return os.getenv(provider["model_setting"], provider["default_model"])
+
+
+def _default_base_url() -> str:
+    _, provider = _default_provider_settings()
+    mode_setting = provider.get("mode_setting")
+    mode = os.getenv(mode_setting, provider.get("default_mode", "local")).lower() if mode_setting else ""
+    setting = provider.get("base_url_settings", {}).get(mode)
+    return os.getenv(setting, provider.get("default_base_urls", {}).get(mode, "")) if setting else ""
+
+
 @dataclass
 class AppConfig:
     """Runtime configuration for a research run."""
 
     topic: str
-    max_analysts: int = 3
-    max_interview_turns: int = 2
-    model_name: str = os.getenv(
-        "GROQ_MODEL" if os.getenv("LLM_PROVIDER", "ollama").lower() == "groq" else "OLLAMA_MODEL",
-        "openai/gpt-oss-20b" if os.getenv("LLM_PROVIDER", "ollama").lower() == "groq" else "qwen2.5:14b",
-    )
-    base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    llm_provider: str = os.getenv("LLM_PROVIDER", "ollama")
-    api_key: Optional[str] = field(default_factory=lambda: os.getenv("GROQ_API_KEY"))
-    temperature: float = 0.0
-    tavily_max_results: int = 3
-    thread_id: str = "1"
-    output_path: str = "research_report.md"
-    interactive_feedback: bool = True
+    max_analysts: int = PROJECT_SETTINGS["runtime"]["default_max_analysts"]
+    max_interview_turns: int = PROJECT_SETTINGS["runtime"]["max_interview_turns"]
+    model_name: str = field(default_factory=_default_model_name)
+    base_url: str = field(default_factory=_default_base_url)
+    llm_provider: str = field(default_factory=lambda: _default_provider_settings()[1]["driver"])
+    api_key: Optional[str] = None
+    temperature: float = PROJECT_SETTINGS["runtime"]["temperature"]
+    tavily_max_results: int = PROJECT_SETTINGS["runtime"]["tavily_max_results"]
+    thread_id: str = PROJECT_SETTINGS["runtime"]["default_thread_id"]
+    output_path: str = PROJECT_SETTINGS["runtime"]["default_output_path"]
+    interactive_feedback: bool = PROJECT_SETTINGS["runtime"]["interactive_feedback"]
     log_file: Optional[str] = None
     verbose: bool = False
-    social_domains: List[str] = field(default_factory=lambda: ["linkedin.com"])
-    enable_social_search: bool = True
+    social_domains: List[str] = field(default_factory=lambda: list(PROJECT_SETTINGS["runtime"]["social_domains"]))
+    enable_social_search: bool = PROJECT_SETTINGS["runtime"]["enable_social_search"]
+
+    def __post_init__(self) -> None:
+        if self.api_key is None:
+            family = provider_for_driver(PROJECT_SETTINGS, self.llm_provider.lower().strip())
+            if family:
+                self.api_key = next(
+                    (
+                        os.getenv(name)
+                        for name in PROJECT_SETTINGS["providers"][family].get("api_key_settings", [])
+                        if os.getenv(name)
+                    ),
+                    None,
+                )
 
 
 def configure_logging(verbose: bool = False, log_file: Optional[str] = None) -> None:
@@ -141,9 +175,12 @@ def _ensure_env_var(var_name: str) -> None:
 def load_environment() -> None:
     """Load .env and make sure required API keys are present."""
     load_dotenv()
-    _ensure_env_var("TAVILY_API_KEY")
+    tavily_key_setting = PROJECT_SETTINGS["runtime"]["tavily_api_key_setting"]
+    tavily_client_env_var = PROJECT_SETTINGS["runtime"]["tavily_client_env_var"]
+    _ensure_env_var(tavily_key_setting)
+    os.environ[tavily_client_env_var] = os.environ[tavily_key_setting]
 
-    for var_name in ("LANGSMITH_API_KEY", "TAVILY_API_KEY"):
+    for var_name in ("LANGSMITH_API_KEY", tavily_key_setting):
         value = os.environ.get(var_name)
         if value:
             logger.info("%s loaded (starts with %s...)", var_name, value[:4])
@@ -297,173 +334,18 @@ class ResearchGraphState(TypedDict):
     final_report: str
 
 
-#Prompt templates
-
-ANALYST_INSTRUCTIONS = """You are tasked with creating a diverse set of AI Analyst personas. Follow these instructions carefully:
-
-1. First, review the research topic:
-{topic}
-
-2. Examine any editorial feedback that has been optionally provided to guide creation of the personas. This feedback may include specific areas of focus, desired expertise, or any other relevant information.
-{human_analyst_feedback}
-
-3. Determine the most interesting themes based on the documents and/or feedback provided above.
-
-4. Pick the top {max_analysts} themes.
-
-5. Assign one analyst to each theme."""
-
-QUESTION_INSTRUCTIONS = """You are an analyst tasked with interviewing an expert to learn more about a specific topic.
-
-Your goal is boiling down to interesting and specific insights related to the topic.
-
-1. Interesting: Insights that people will find surprising or non-obvious.
-2. Specific: Insights that avoid generalities and include specific examples from the expert.
-
-Here is your topic of focus and set of goals: {goals}
-
-Begin by introducing yourself using a name that fits your persona, and then ask your question.
-
-Continue to ask questions to drill down and refine your understanding of the topic.
-
-When you are satisfied with your understanding, complete the interview with: "Thank you so much for your time and insights. I really appreciate it."
-
-Remember to stay in character throughout your response, reflecting the persona and goals provided to you."""
-
-SEARCH_INSTRUCTIONS = SystemMessage(
-    content="""You will be given a conversation between an analyst and an expert.
-Your goal is to generate a well-structured query for use in retrieval and / or web-search related to the conversation.
-First analyze the full conversation.
-Pay particular attention to the final question posed by the analyst.
-Convert this final question into a well structured web search query."""
-)
-
-WIKI_SEARCH_INSTRUCTIONS = SystemMessage(
-    content="""You will be given a conversation between an analyst and an expert.
-Return the name of ONE Wikipedia article that best matches the analyst's final question.
-Use 2 to 4 words. Examples: "Artificial intelligence", "Economy of Germany", "Software engineering".
-Do not return a sentence or a question."""
-)
-
-SEARCH_REQUEST = HumanMessage(
-    content="Write the search query for the analyst's final question now."
-)
-
-ANSWER_INSTRUCTIONS = """You are an expert being interviewed by an analyst.
-Here is the analyst area of focus: {goals}.
-Your goal is to answer a question posed by the interviewer.
-To answer a question, use this context: {context}
-
-When answering questions, follow these guidelines:
-1. Use only information provided in the context.
-2. Do not introduce external information or make assumptions beyond what is explicitly stated in the context.
-3. The context contains sources at the top of each individual document.
-4. Include these sources in your answer next to any relevant statements. For example, for source # 1 use [1].
-5. List your sources in order at the bottom of your answer. [1] Source 1, [2] Source 2, etc.
-6. If the source is: <Document source="assistant/docs/llama3_1.pdf" page="7"/> then just list:
-      [1] assistant/docs/llama3_1.pdf, page 7
-And skip the addition of the brackets as well as the Document source preamble in your citation."""
-
-SECTION_WRITER_INSTRUCTIONS = """You are an expert technical writer.
-Your task is to create a short, easily digestible section of a report based on a set of source documents.
-1. Analyze the content of the source documents:
-- The name of each source document is at the start of the document, with the <Document tag.
-
-2. Create a report structure using markdown formatting:
-- Use ## for the section title
-- Use ### for sub-section headers
-
-3. Write the report following this structure:
-a. Title (## header)
-b. Summary (### header)
-c. Sources (### header)
-
-4. Make your title engaging based upon the focus area of the analyst:
-{focus}
-
-5. For the summary section:
-- Set up summary with general background / context related to the focus area of the analyst
-- Emphasize what is novel, interesting, or surprising about insights gathered from the interview
-- Create a numbered list of source documents, as you use them
-- Do not mention the names of interviewers or experts
-- Aim for approximately 400 words maximum
-- Use numbered sources in your report (e.g., [1], [2]) based on information from source documents
-
-6. In the Sources section:
-- Include all sources used in your report
-- Provide full links to relevant websites or specific document paths
-- Separate each source by a newline. Use two spaces at the end of each line to create a newline in Markdown.
-- It will look like:
-
-### Sources
-[1] Link or Document name
-[2] Link or Document name
-
-7. Be sure to combine sources. Do not repeat the same source under two different numbers.
-
-8. Final review:
-- Ensure the report follows the required structure
-- Include no preamble before the title of the report
-- Check that all guidelines have been followed"""
-
-REPORT_WRITER_INSTRUCTIONS = """You are a technical writer creating a report on this overall topic:
-
-{topic}
-
-You have a team of analysts. Each analyst has done two things:
-
-1. They conducted an interview with an expert on a specific sub-topic.
-2. They wrote up their findings into a memo.
-
-Your task:
-
-1. You will be given a collection of memos from your analysts.
-2. Think carefully about the insights from each memo.
-3. Consolidate these into a crisp overall summary that ties together the central ideas from all of the memos.
-4. Summarize the central points in each memo into a cohesive single narrative.
-
-To format your report:
-
-1. Use markdown formatting.
-2. Include no pre-amble for the report.
-3. Use no sub-heading.
-4. Start your report with a single title header: ## Insights
-5. Do not mention any analyst names in your report.
-6. Preserve any citations in the memos, which will be annotated in brackets, for example [1] or [2].
-7. Create a final, consolidated list of sources and add to a Sources section with the `## Sources` header.
-8. List your sources in order and do not repeat.
-
-[1] Source 1
-[2] Source 2
-
-Here are the memos from your analysts to build your report from:
-
-{context}
-"""
-
-INTRO_CONCLUSION_INSTRUCTIONS = """You are a technical writer finishing a report on {topic}
-
-You will be given all of the sections of the report.
-
-Your job is to write a crisp and compelling introduction or conclusion section.
-
-The user will instruct you whether to write the introduction or conclusion.
-
-Include no pre-amble for either section.
-
-Target around 100 words, crisply previewing (for introduction) or recapping (for conclusion) all of the sections of the report.
-
-Use markdown formatting.
-
-For your introduction, create a compelling title and use the # header for the title.
-
-For your introduction, use ## Introduction as the section header.
-
-For your conclusion, use ## Conclusion as the section header.
-
-Here are the sections to reflect on for writing: {formatted_str_sections}"""
-
-INTERVIEW_CLOSING_LINE = "Thank you so much for your time and insights. I really appreciate it."
+# Prompt text is configurable in config.toml; code below adds runtime values.
+PROMPTS = PROJECT_SETTINGS["prompts"]
+ANALYST_INSTRUCTIONS = PROMPTS["analyst"]
+QUESTION_INSTRUCTIONS = PROMPTS["question"]
+SEARCH_INSTRUCTIONS = SystemMessage(content=PROMPTS["search"])
+WIKI_SEARCH_INSTRUCTIONS = SystemMessage(content=PROMPTS["wiki_search"])
+SEARCH_REQUEST = HumanMessage(content=PROMPTS["search_request"])
+ANSWER_INSTRUCTIONS = PROMPTS["answer"]
+SECTION_WRITER_INSTRUCTIONS = PROMPTS["section_writer"]
+REPORT_WRITER_INSTRUCTIONS = PROMPTS["report_writer"]
+INTRO_CONCLUSION_INSTRUCTIONS = PROMPTS["intro_conclusion"]
+INTERVIEW_CLOSING_LINE = PROMPTS["interview_closing_line"]
 
 #Construction of the graph
 
@@ -478,20 +360,23 @@ class ResearchAssistant:
         self,
         llm: Any,
         search_tool: Any,
-        max_interview_turns: int = 2,
+        max_interview_turns: int = PROJECT_SETTINGS["runtime"]["max_interview_turns"],
+        llm_provider: str = PROJECT_SETTINGS["providers"][PROJECT_SETTINGS["runtime"]["default_family"]]["driver"],
         checkpointer: Optional[MemorySaver] = None,
         social_domains: Optional[List[str]] = None,
-        enable_social_search: bool = True,
+        enable_social_search: bool = PROJECT_SETTINGS["runtime"]["enable_social_search"],
         use_checkpointer: bool = True,
         save_to_disk: bool = False
     ) -> None:
         self.llm = llm
+        self.llm_provider = llm_provider.lower().strip()
         self.search_tool = search_tool
         self.max_interview_turns = max_interview_turns
         self.checkpointer = checkpointer or MemorySaver() if use_checkpointer else None
         self.save_to_disk = save_to_disk
         self.token_tracker = TokenTracker()
         self.last_evaluation_evidence: List[str] = []
+        self.run_warnings: list[str] = []
         self.social_domains = list(social_domains or []) if enable_social_search else []
 
         self._interview_builder = self._build_interview_subgraph()
@@ -499,8 +384,31 @@ class ResearchAssistant:
 
     # LLM Call helpers
 
+    def _prepare_messages(self, messages: list, call_label: str) -> list:
+        """Ensure Gemini requests end with a user turn during interviews."""
+        if (
+            getattr(
+                self,
+                "llm_provider",
+                PROJECT_SETTINGS["providers"][PROJECT_SETTINGS["runtime"]["default_family"]]["driver"],
+            ) != "google"
+            or not messages
+            or not isinstance(messages[-1], AIMessage)
+        ):
+            return messages
+
+        follow_up = PROMPTS.get(
+            f"{call_label}_follow_up",
+            PROMPTS["generic_follow_up"],
+        )
+        return [*messages, HumanMessage(content=follow_up)]
+
     @staticmethod
-    def _invoke_with_rate_limit_retry(operation, call_label: str, max_retries: int = 3):
+    def _invoke_with_rate_limit_retry(
+        operation,
+        call_label: str,
+        max_retries: int = PROJECT_SETTINGS["runtime"]["llm_rate_limit_retries"],
+    ):
         """Retry HTTP 429 responses after the provider's suggested wait."""
         for attempt in range(max_retries + 1):
             try:
@@ -510,6 +418,17 @@ class ResearchAssistant:
                 status_code = getattr(exc, "status_code", None)
                 if status_code is None:
                     status_code = getattr(response, "status_code", None)
+                error_text = str(exc).lower()
+                if status_code == 429 and (
+                    "per day" in error_text
+                    or "per-day" in error_text
+                    or "daily quota" in error_text
+                ):
+                    logger.error(
+                        "LLM daily quota exhausted | call=%s | retry will not help until quota reset",
+                        call_label,
+                    )
+                    raise
                 if status_code != 429 or attempt >= max_retries:
                     raise
 
@@ -531,8 +450,14 @@ class ResearchAssistant:
                         delay = float(match.group(1))
 
                 if delay is None or delay <= 0:
-                    delay = min(2 ** attempt, 30)
-                delay = min(delay + 0.5, 120)
+                    delay = min(
+                        2 ** attempt,
+                        PROJECT_SETTINGS["runtime"]["llm_retry_default_wait_seconds"],
+                    )
+                delay = min(
+                    delay + 0.5,
+                    PROJECT_SETTINGS["runtime"]["llm_retry_max_wait_seconds"],
+                )
 
                 logger.warning(
                     "LLM rate limit | call=%s | retry=%d/%d | waiting %.1fs",
@@ -546,6 +471,7 @@ class ResearchAssistant:
     @traceable(name="invoke_llm", run_type="tool")
     def _invoke(self, messages: list, call_label: str):
         """Plain (non-structured) LLM call, with token usage recorded."""
+        messages = self._prepare_messages(messages, call_label)
         response = self._invoke_with_rate_limit_retry(
             lambda: self.llm.invoke(messages), call_label
         )
@@ -555,6 +481,7 @@ class ResearchAssistant:
     @traceable(name="invoke_structured", run_type="tool")
     def _invoke_structured(self, schema: type, messages: list, call_label: str):
         """Invoke a structured LLM call and log parsing failures safely."""
+        messages = self._prepare_messages(messages, call_label)
         structured_llm = self.llm.with_structured_output(
             schema,
             include_raw=True,
@@ -700,34 +627,53 @@ class ResearchAssistant:
         """
         try:
             result = self._invoke_structured(
-                SearchQuery, instructions + state["messages"] + [SEARCH_REQUEST], call_label=call_label
+                SearchQuery,
+                [instructions, *state["messages"], SEARCH_REQUEST],
+                call_label=call_label,
             )
-            logger.error(
-                "Structured result type: %s",
-                type(result).__name__,
-            )
+            if isinstance(result, SearchQuery):
+                query = result.search_query.strip()
+            elif isinstance(result, dict):
+                parsed = result.get("parsed")
+                raw_query = (
+                    parsed.search_query
+                    if isinstance(parsed, SearchQuery)
+                    else result.get("search_query")
+                )
+                query = raw_query.strip() if isinstance(raw_query, str) else ""
+            else:
+                query = ""
 
-            if isinstance(result, dict):
-                logger.error(
-                    "Parsed result available: %s",
-                    result.get("parsed") is not None,
-                )
-                logger.error(
-                    "Parsing error: %r",
-                    result.get("parsing_error"),
-                )
-                logger.error(
-                    "Raw response type: %s",
-                    type(result.get("raw")).__name__,
-                )
-                raw_query = getattr(result, "search_query", None)
-                query = raw_query.strip() if raw_query else ""
-                if not query:
-                    raise ValueError("Empty or null search_query returned")
-                return self._mask_search_query(query)
+            if not query:
+                raise ValueError("Empty or null search_query returned")
+            return self._mask_search_query(query)
         except (OutputParserException, ValueError, Exception) as exc:
             logger.warning("Search query generation failed (%s); using fallback.", exc)
+            self._record_run_warning(
+                f"Search-query generation failed for {call_label}; a fallback query was used."
+            )
             return self._mask_search_query(self._fallback_search_query(state))
+
+    def _record_run_warning(self, warning: str) -> None:
+        if warning not in self.run_warnings:
+            self.run_warnings.append(warning)
+
+    def _record_search_error(self, label: str, error: Any) -> None:
+        """Record a safe user-facing error without exposing provider response data."""
+        error_text = str(error).lower()
+        status_code = getattr(error, "status_code", None)
+        if status_code is None and "401" in error_text:
+            status_code = 401
+        if status_code is None and "429" in error_text:
+            status_code = 429
+
+        if status_code == 401:
+            message = f"{label} authentication failed (HTTP 401). Check the configured search API key."
+        elif status_code == 429:
+            message = f"{label} was rate limited (HTTP 429). Check the provider quota and retry later."
+        else:
+            message = f"{label} failed. Check the search provider configuration and service status."
+        self._record_run_warning(message)
 
     @staticmethod
     def _mask_search_query(query: str) -> str:
@@ -792,6 +738,7 @@ class ResearchAssistant:
             search_docs = self._extract_results(data, "web search")
         except Exception as exc:
             logger.warning("Tavily search failed: %s", exc)
+            self._record_search_error("Web search", exc)
             return {"context": [f"Web search failed for query '{query}'."]}
 
         formatted_docs = "\n\n---\n\n".join(
@@ -873,6 +820,9 @@ class ResearchAssistant:
             search_docs = WikipediaLoader(query=query, load_max_docs=2).load()
         except Exception as exc:
             logger.warning("Wikipedia fetch failed: %s", exc)
+            self._record_run_warning(
+                "Wikipedia search failed. The report may have less supporting context."
+            )
             self._diagnose_wikipedia_failure(query, exc)
             search_docs = []
 
@@ -917,6 +867,7 @@ class ResearchAssistant:
             search_docs = self._extract_results(data, "social search")
         except Exception as exc:
             logger.warning("Social-platform search failed: %s", exc)
+            self._record_search_error("Social search", exc)
             return {"context": [f"Social-platform search failed for query '{query}'."]}
  
         if not search_docs:
@@ -1128,6 +1079,7 @@ class ResearchAssistant:
     @traceable(name="start_graph", run_type="tool")
     def start(self, topic: str, max_analysts: int, thread_id: str) -> List[Analyst]:
         """Run upto the first human-feedback interrupt."""
+        self.run_warnings = []
         thread = {"configurable": {"thread_id": thread_id}}
         analysts: List[Analyst] = []
         for event in self.graph.stream(
@@ -1155,19 +1107,21 @@ class ResearchAssistant:
         return analysts
 
     
-    @staticmethod
     @traceable(name="extract_results", run_type="tool")
-    def _extract_results(data: Any, label: str) -> list:
+    def _extract_results(self, data: Any, label: str) -> list:
         """Return a clean list of result dicts from a Tavily response."""
         if isinstance(data, dict):
             if data.get("error"):
                 logger.warning("%s returned an error: %s", label, data["error"])
+                self._record_search_error(label.title(), data["error"])
                 return []
             results = data.get("results", [])
         elif isinstance(data, list):
             results = data
         elif isinstance(data, str):
             logger.info("%s returned no results: %s", label, data[:120])
+            if "error" in data.lower() or "unauthorized" in data.lower():
+                self._record_search_error(label.title(), data)
             return []
         else:
             logger.warning("%s returned unexpected type %s: %r",
@@ -1224,25 +1178,40 @@ def build_assistant(config: AppConfig) -> ResearchAssistant:
         )
     elif provider == "groq":
         if not config.api_key:
-            raise ValueError("GROQ_API_KEY is required when LLM_PROVIDER=groq.")
+            family = provider_for_driver(PROJECT_SETTINGS, provider)
+            key_names = PROJECT_SETTINGS["providers"].get(family, {}).get("api_key_settings", [])
+            raise ValueError(f"One of {key_names} is required for provider {provider!r}.")
         llm = ChatGroq(
             model=config.model_name,
             api_key=config.api_key,
             temperature=config.temperature,
         )
+    elif provider == "google":
+        if not config.api_key:
+            family = provider_for_driver(PROJECT_SETTINGS, provider)
+            key_names = PROJECT_SETTINGS["providers"].get(family, {}).get("api_key_settings", [])
+            raise ValueError(f"One of {key_names} is required for provider {provider!r}.")
+        llm = ChatGoogleGenerativeAI(
+            model=config.model_name,
+            google_api_key=config.api_key,
+            temperature=config.temperature,
+        )
     else:
-        raise ValueError("LLM_PROVIDER must be 'ollama' or 'groq'.")
+        supported = sorted({entry["driver"] for entry in PROJECT_SETTINGS["providers"].values()})
+        raise ValueError(f"No model adapter is implemented for provider {provider!r}. Supported adapters: {supported}.")
     search_tool = TavilySearch(max_results=config.tavily_max_results)
     return ResearchAssistant(
         llm=llm,
         search_tool=search_tool,
         max_interview_turns=config.max_interview_turns,
+        llm_provider=provider,
         enable_social_search=config.enable_social_search,
         social_domains=config.social_domains
     )
 
 
 def parse_args() -> AppConfig:
+    load_dotenv()
     parser = argparse.ArgumentParser(description="Multi-agent research assistant")
     parser.add_argument(
         "--topic",
@@ -1250,18 +1219,36 @@ def parse_args() -> AppConfig:
         default=None,
         help="Research topic to investigate. Prompted for interactively if omitted.",
     )
-    parser.add_argument("--max-analysts", type=int, default=3)
-    parser.add_argument("--max-interview-turns", type=int, default=2)
-    default_provider = os.getenv("LLM_PROVIDER", "ollama").lower().strip()
-    default_model = (
-        os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
-        if default_provider == "groq"
-        else os.getenv("OLLAMA_MODEL", "qwen2.5:14b")
+    runtime = PROJECT_SETTINGS["runtime"]
+    default_family = runtime["default_family"]
+    default_driver = PROJECT_SETTINGS["providers"][default_family]["driver"]
+    configured_driver = os.getenv("LLM_PROVIDER", default_driver).lower().strip()
+    default_family = provider_for_driver(PROJECT_SETTINGS, configured_driver) or default_family
+    provider_settings = PROJECT_SETTINGS["providers"][default_family]
+    parser.add_argument(
+        "--model-family",
+        choices=list(PROJECT_SETTINGS["providers"]),
+        default=default_family,
+        help="Select a model family defined in the project configuration.",
     )
-    parser.add_argument("--model", default=default_model, dest="model_name")
-    parser.add_argument("--temperature", type=float, default=0.0)
-    parser.add_argument("--thread-id", default="1")
-    parser.add_argument("--output", default="research_report.md", dest="output_path")
+    parser.add_argument(
+        "--max-analysts",
+        type=int,
+        default=int(os.getenv("MAX_ANALYSTS", runtime["default_max_analysts"])),
+    )
+    parser.add_argument(
+        "--max-interview-turns",
+        type=int,
+        default=int(os.getenv("MAX_INTERVIEW_TURNS", runtime["max_interview_turns"])),
+    )
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=float(os.getenv("TEMPERATURE", runtime["temperature"])),
+    )
+    parser.add_argument("--model", default=None, dest="model_name")
+    parser.add_argument("--thread-id", default=runtime["default_thread_id"])
+    parser.add_argument("--output", default=runtime["default_output_path"], dest="output_path")
     parser.add_argument(
         "--non-interactive",
         action="store_true",
@@ -1270,17 +1257,19 @@ def parse_args() -> AppConfig:
     parser.add_argument("--verbose", action="store_true", help="Enable DEBUG-level logging.")
     parser.add_argument(
         "--log-file",
-        default="research_agent.log",
+        default=runtime["default_log_file"],
         dest="log_file",
         help="Path to write logs to, in addition to the console. Pass an empty "
         "string ('') to disable file logging.",
     )
     parser.add_argument(
         "--social-domains",
-        default="linkedin.com",
-        help="Comma-separated domains to search for public, indexed employee/company "
-        "social content (e.g. 'linkedin.com,x.com'). This queries Tavily's search "
-        "index of already-public pages - it does not scrape these platforms directly.",
+        default=os.getenv("SOCIAL_DOMAINS", ",".join(runtime["social_domains"])),
+        help=(
+            "Comma-separated domains to include in the public indexed social search. "
+            f"Configured default: {','.join(runtime['social_domains'])}. "
+            "This uses the search index and does not scrape social platforms."
+        ),
     )
 
     parser.add_argument(
@@ -1290,6 +1279,18 @@ def parse_args() -> AppConfig:
     )
     
     args = parser.parse_args()
+    provider_settings = PROJECT_SETTINGS["providers"][args.model_family]
+    default_provider = provider_settings["driver"]
+    model_name = args.model_name or os.getenv(
+        provider_settings["model_setting"], provider_settings["default_model"]
+    )
+    mode_setting = provider_settings.get("mode_setting")
+    mode = os.getenv(mode_setting, provider_settings.get("default_mode", "local")).lower() if mode_setting else ""
+    base_url_setting = provider_settings.get("base_url_settings", {}).get(mode)
+    base_url = (
+        os.getenv(base_url_setting, provider_settings.get("default_base_urls", {}).get(mode, ""))
+        if base_url_setting else ""
+    )
 
     topic = args.topic
     if not topic:
@@ -1310,15 +1311,23 @@ def parse_args() -> AppConfig:
         topic=topic,
         max_analysts=args.max_analysts,
         max_interview_turns=args.max_interview_turns,
-        model_name=args.model_name,
+        model_name=model_name,
+        base_url=base_url,
         llm_provider=default_provider,
-        api_key=os.getenv("GROQ_API_KEY"),
+        api_key=next(
+            (os.getenv(name) for name in provider_settings.get("api_key_settings", []) if os.getenv(name)),
+            None,
+        ),
         temperature=args.temperature,
         thread_id=args.thread_id,
         output_path=args.output_path,
-        interactive_feedback=not args.non_interactive,
+        interactive_feedback=runtime["interactive_feedback"] and not args.non_interactive,
         social_domains=social_domains,
-        enable_social_search=not args.no_social_search,
+        enable_social_search=(
+            os.getenv("ENABLE_SOCIAL_SEARCH", str(runtime["enable_social_search"])).lower()
+            in {"1", "true", "yes", "on"}
+            and not args.no_social_search
+        ),
         log_file=args.log_file or None,
         verbose=args.verbose,
     )

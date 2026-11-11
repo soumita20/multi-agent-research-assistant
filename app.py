@@ -8,21 +8,19 @@ from dotenv import load_dotenv
 from research_agent import AppConfig, build_assistant
 from privacy import configure_langsmith_tracing, redact_pii
 from evaluation import evaluate_report_with_judge
+from app_settings import PROJECT_SETTINGS, provider_for_driver
 
 
 load_dotenv()
 
 st.set_page_config(
-    page_title="Multi-Agent Research Assistant",
-    page_icon="🔬",
-    layout="wide",
+    page_title=PROJECT_SETTINGS["ui"]["page_title"],
+    page_icon=PROJECT_SETTINGS["ui"]["page_icon"],
+    layout=PROJECT_SETTINGS["ui"]["layout"],
 )
 
-st.title("🔬 Multi-Agent Research Assistant")
-st.caption(
-    "Explore a topic with specialized AI analysts, "
-    "human feedback, research interviews, and report synthesis."
-)
+st.title(PROJECT_SETTINGS["ui"]["title"])
+st.caption(PROJECT_SETTINGS["ui"]["caption"])
 
 def get_setting(name: str, default: str = "") -> str:
     """Read configuration from environment or Streamlit secrets."""
@@ -37,6 +35,12 @@ def get_setting(name: str, default: str = "") -> str:
     except Exception:
         # Local execution may not have a secrets.toml file.
         return default
+
+
+def default_analyst_count() -> int:
+    runtime = PROJECT_SETTINGS["runtime"]
+    requested = int(get_setting("MAX_ANALYSTS", str(runtime["default_max_analysts"])))
+    return min(max(requested, int(runtime["minimum_max_analysts"])), int(runtime["maximum_max_analysts"]))
 
 
 def configure_privacy_safe_tracing() -> tuple[bool, str | None]:
@@ -59,91 +63,71 @@ def configure_privacy_safe_tracing() -> tuple[bool, str | None]:
 LANGSMITH_TRACING_ACTIVE, LANGSMITH_TRACING_ERROR = configure_privacy_safe_tracing()
 
 
-def configure_model():
-    """
-    Configure local Ollama, Ollama Cloud, or Groq hosted inference.
+def default_model_family() -> str:
+    configured_driver = get_setting(
+        "LLM_PROVIDER",
+        PROJECT_SETTINGS["providers"][PROJECT_SETTINGS["runtime"]["default_family"]]["driver"],
+    ).lower().strip()
+    return provider_for_driver(PROJECT_SETTINGS, configured_driver) or PROJECT_SETTINGS["runtime"]["default_family"]
 
-    Local:
-        OLLAMA_MODE=local
-        OLLAMA_BASE_URL=http://localhost:11434
-        OLLAMA_MODEL=qwen2.5:14b
 
-    Cloud:
-        OLLAMA_MODE=cloud
-        OLLAMA_BASE_URL=https://ollama.com
-        OLLAMA_MODEL=<supported cloud model>
-        OLLAMA_API_KEY=<your Ollama API key>
+def available_models(family: str) -> dict[str, str]:
+    """Return model IDs mapped to UI labels, retaining configured custom IDs."""
+    provider = PROJECT_SETTINGS["providers"][family]
+    models = {entry["id"]: entry["label"] for entry in provider["models"]}
+    configured = get_setting(provider["model_setting"], provider["default_model"])
+    models.setdefault(configured, f"{configured} (configured)")
+    return models
 
-    Groq:
-        LLM_PROVIDER=groq
-        GROQ_MODEL=openai/gpt-oss-20b
-        GROQ_API_KEY=<your Groq API key>
-    """
-    provider = get_setting("LLM_PROVIDER", "ollama").lower().strip()
 
-    if provider == "groq":
-        api_key = get_setting("GROQ_API_KEY")
-        if not api_key:
-            raise ValueError(
-                "GROQ_API_KEY is required for Groq. Configure it in Streamlit secrets."
-            )
-        model = get_setting("GROQ_MODEL", "openai/gpt-oss-20b")
-        return provider, "", model, api_key
+def default_model_name(family: str) -> str:
+    provider = PROJECT_SETTINGS["providers"][family]
+    return get_setting(provider["model_setting"], provider["default_model"])
 
-    if provider != "ollama":
-        raise ValueError("LLM_PROVIDER must be 'ollama' or 'groq'.")
 
-    mode = get_setting("OLLAMA_MODE", "local").lower().strip()
+def configure_model(family: str, model: str):
+    """Resolve the selected family and model using the project catalog."""
+    try:
+        provider = PROJECT_SETTINGS["providers"][family]
+    except KeyError as exc:
+        raise ValueError(f"Model family {family!r} is not configured.") from exc
 
-    model = get_setting(
-        "OLLAMA_MODEL",
-        "qwen2.5:14b",
+    driver = provider["driver"]
+    api_key = next(
+        (get_setting(name) for name in provider.get("api_key_settings", []) if get_setting(name)),
+        None,
     )
-
-    if mode == "local":
-        base_url = get_setting(
-            "OLLAMA_BASE_URL",
-            "http://localhost:11434",
-        )
-
-    elif mode == "cloud":
-        base_url = get_setting(
-            "OLLAMA_BASE_URL",
-            "https://ollama.com",
-        )
-
-        api_key = get_setting("OLLAMA_API_KEY")
-
-        if not api_key:
-            raise ValueError(
-                "OLLAMA_API_KEY is required for Ollama Cloud. "
-                "Configure it in Streamlit secrets."
-            )
-
-        # ChatOllama does not automatically use this key for
-        # direct requests to ollama.com. Configure its HTTP
-        # clients to send the required Bearer token.
-        os.environ["OLLAMA_API_KEY"] = api_key
-
-    else:
+    base_url = ""
+    mode = driver
+    if driver == "ollama":
+        mode = get_setting(provider["mode_setting"], provider["default_mode"]).lower().strip()
+        base_url_key = provider.get("base_url_settings", {}).get(mode)
+        if not base_url_key:
+            raise ValueError(f"Ollama mode {mode!r} is not configured for model family {family!r}.")
+        base_url = get_setting(base_url_key, provider["default_base_urls"][mode])
+        if mode == "cloud" and not api_key:
+            raise ValueError(f"One of {provider['api_key_settings']} is required for Ollama Cloud.")
+        if mode == "cloud":
+            os.environ[provider["api_key_settings"][0]] = api_key
+        os.environ[base_url_key] = base_url
+        os.environ[provider["model_setting"]] = model
+    elif not api_key:
         raise ValueError(
-            "OLLAMA_MODE must be 'local' or 'cloud'."
+            f"One of {provider.get('api_key_settings', [])} is required for {family}. "
+            "Configure it in environment variables or Streamlit secrets."
         )
-
-    os.environ["OLLAMA_BASE_URL"] = base_url
-    os.environ["OLLAMA_MODEL"] = model
-
-    return mode, base_url, model, None
+    return driver, base_url, model, api_key
 
 # Session state
 
 def initialise_state():
+    runtime = PROJECT_SETTINGS["runtime"]
     defaults = {
         "stage": "input",
         "assistant": None,
         "thread_id": None,
         "topic": "",
-        "max_analysts": int(get_setting("MAX_ANALYSTS", "3")),
+        "max_analysts": default_analyst_count(),
         "analysts": [],
         "report": "",
         "error": None,
@@ -151,6 +135,7 @@ def initialise_state():
         "pii_warning": None,
         "judge_evaluation": None,
         "judge_evaluation_error": None,
+        "model_family": default_model_family(),
     }
 
     for key, value in defaults.items():
@@ -212,32 +197,43 @@ def display_analysts(analysts):
 
 # Workflow operations
 
-def generate_analysts(topic: str, max_analysts: int):
-    mode, base_url, model, api_key = configure_model()
+def generate_analysts(topic: str, max_analysts: int, model_family: str, model: str):
+    mode, base_url, model, api_key = configure_model(model_family, model)
+    runtime = PROJECT_SETTINGS["runtime"]
 
-    tavily_key = get_setting("TAVILY_API_KEY")
+    tavily_key_setting = runtime["tavily_api_key_setting"]
+    tavily_key = get_setting(tavily_key_setting)
 
     if not tavily_key:
         raise ValueError(
-            "TAVILY_API_KEY is missing. Configure it in .env "
+            f"{tavily_key_setting} is missing. Configure it in .env "
             "for local development or Streamlit secrets for cloud."
         )
 
-    os.environ["TAVILY_API_KEY"] = tavily_key
+    os.environ[runtime["tavily_client_env_var"]] = tavily_key
 
 
     config = AppConfig(
         topic=topic,
         max_analysts=max_analysts,
-        max_interview_turns=2,
+        max_interview_turns=int(get_setting("MAX_INTERVIEW_TURNS", str(runtime["max_interview_turns"]))),
         model_name=model,
         base_url=base_url,
-        llm_provider="groq" if mode == "groq" else "ollama",
+        llm_provider=mode,
         api_key=api_key,
-        temperature=0.0,
-        tavily_max_results=int(get_setting("TAVILY_MAX_RESULTS", "3")),
+        temperature=float(get_setting("TEMPERATURE", str(runtime["temperature"]))),
+        tavily_max_results=int(get_setting("TAVILY_MAX_RESULTS", str(runtime["tavily_max_results"]))),
         thread_id=uuid.uuid4().hex,
-        enable_social_search=True,
+        enable_social_search=get_setting(
+            "ENABLE_SOCIAL_SEARCH", str(runtime["enable_social_search"])
+        ).lower() in {"1", "true", "yes", "on"},
+        social_domains=[
+            domain.strip()
+            for domain in get_setting(
+                "SOCIAL_DOMAINS", ",".join(runtime["social_domains"])
+            ).split(",")
+            if domain.strip()
+        ],
     )
 
     assistant = build_assistant(config)
@@ -258,7 +254,10 @@ def generate_analysts(topic: str, max_analysts: int):
     st.session_state.topic = topic
     st.session_state.max_analysts = max_analysts
     st.session_state.analysts = analysts
-    st.session_state.ollama_mode = mode
+    st.session_state.ollama_mode = get_setting(
+        PROJECT_SETTINGS["providers"][model_family].get("mode_setting", ""),
+        PROJECT_SETTINGS["providers"][model_family].get("default_mode", mode),
+    )
     st.session_state.report = ""
     st.session_state.error = None
     st.session_state.stage = "feedback_choice"
@@ -287,6 +286,7 @@ def apply_feedback(feedback: str):
 
 def execute_research():
     """Resume the graph and generate the final report."""
+    status = None
     try:
         with st.status(
             "Research in progress...",
@@ -337,8 +337,14 @@ def execute_research():
             )
 
     except Exception as exc:
-        st.session_state.error = str(exc)
+        st.session_state.error = f"{type(exc).__name__}: {exc}"
         st.session_state.stage = "research_error"
+        if status is not None:
+            status.update(
+                label="Research stopped because an error occurred.",
+                state="error",
+                expanded=True,
+            )
 
 # Sidebar: inference configuration
 
@@ -348,24 +354,31 @@ if st.session_state.pii_warning:
     st.warning(st.session_state.pii_warning)
 
 with st.sidebar:
-    st.header("Inference configuration")
-
-    current_provider = get_setting("LLM_PROVIDER", "ollama").lower().strip()
-    current_mode = get_setting("OLLAMA_MODE", "local").lower()
-
-    st.write(
-        "**Configured mode:** "
-        + (
-            "Groq"
-            if current_provider == "groq"
-            else ("Ollama Cloud" if current_mode == "cloud" else "Local Ollama")
-        )
+    st.header(PROJECT_SETTINGS["ui"]["sidebar_header"])
+    model_family = st.selectbox(
+        PROJECT_SETTINGS["ui"]["model_family_label"],
+        list(PROJECT_SETTINGS["providers"]),
+        key="model_family",
     )
-
-    st.caption(
-        "Change LLM_PROVIDER / OLLAMA_MODE in your local .env file or "
-        "Streamlit Cloud secrets."
+    models = available_models(model_family)
+    default_name = default_model_name(model_family)
+    model_name = st.selectbox(
+        PROJECT_SETTINGS["ui"]["model_name_label"],
+        list(models),
+        index=list(models).index(default_name),
+        format_func=lambda model_id: models[model_id],
+        key=f"model_name_{model_family.lower()}",
     )
+    provider_settings = PROJECT_SETTINGS["providers"][model_family]
+    if provider_settings["driver"] == "ollama":
+        mode = get_setting(provider_settings["mode_setting"], provider_settings["default_mode"]).lower()
+        st.write(f"**Selected provider:** {model_family} ({mode})")
+        st.caption("Install local model IDs in your configured local model runtime before selecting them.")
+    else:
+        st.write(f"**Selected provider:** {model_family}")
+        st.caption(provider_settings.get(
+            "usage_note", "Availability and request limits depend on your provider account."
+        ))
 
     st.caption(
         "Local mode requires Ollama to be running on the "
@@ -373,7 +386,7 @@ with st.sidebar:
     )
     st.caption(
         "LLM-as-judge evaluation is opt-in with ENABLE_LLM_JUDGE=true and "
-        "uses the configured model/provider."
+        "uses the model selected above."
     )
     st.caption(
         "LangSmith tracing: "
@@ -389,24 +402,21 @@ if st.session_state.stage == "input":
 
     with st.form("research_input_form"):
         topic = st.text_area(
-            "What topic would you like to research?",
-            placeholder=(
-                "Example: Enterprise adoption of agentic AI "
-                "and its security implications"
-            ),
+            PROJECT_SETTINGS["ui"]["research_input_label"],
+            placeholder=PROJECT_SETTINGS["ui"]["research_input_placeholder"],
             height=120,
         )
 
         max_analysts = st.number_input(
-            "Maximum number of analysts",
-            min_value=1,
-            max_value=6,
-            value=3,
+            PROJECT_SETTINGS["ui"]["max_analysts_label"],
+            min_value=int(PROJECT_SETTINGS["runtime"]["minimum_max_analysts"]),
+            max_value=int(PROJECT_SETTINGS["runtime"]["maximum_max_analysts"]),
+            value=default_analyst_count(),
             step=1,
         )
 
         submitted = st.form_submit_button(
-            "Generate analysts",
+            PROJECT_SETTINGS["ui"]["search_button_label"],
             type="primary",
             use_container_width=True,
         )
@@ -429,6 +439,8 @@ if st.session_state.stage == "input":
                     generate_analysts(
                         safe_topic,
                         int(max_analysts),
+                        model_family,
+                        model_name,
                     )
 
                 st.rerun()
@@ -535,13 +547,17 @@ if st.session_state.stage == "researching":
 # Research error and retry
 
 if st.session_state.stage == "research_error":
-    st.error(
-        st.session_state.error or "Research could not be completed."
-    )
+    st.error("Research stopped before the report could be completed.")
+    with st.expander("Error details", expanded=True):
+        st.code(st.session_state.error or "No error details were returned.")
 
     if st.button("Retry research", type="primary"):
         st.session_state.error = None
         st.session_state.stage = "researching"
+        st.rerun()
+
+    if st.button("Start a new project with a different model"):
+        reset_session()
         st.rerun()
 
 # Stage 4: Display errors
@@ -550,13 +566,25 @@ if (
     st.session_state.error
     and st.session_state.stage != "research_error"
 ):
-    st.error(st.session_state.error)
+    st.error("The requested action failed. See the details below.")
+    with st.expander("Error details", expanded=True):
+        st.code(st.session_state.error)
 
 # Stage 5: Final report and download
 
 if st.session_state.stage == "complete":
     st.divider()
     st.header("Final Research Report")
+
+    research_warnings = getattr(st.session_state.assistant, "run_warnings", [])
+    if research_warnings:
+        st.warning(
+            "The report was generated, but one or more research sources or model calls had issues. "
+            "The report may have incomplete evidence."
+        )
+        with st.expander("Research warnings", expanded=True):
+            for warning in research_warnings:
+                st.write(f"- {warning}")
 
     if st.session_state.pii_warning:
         st.warning(st.session_state.pii_warning)
