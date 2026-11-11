@@ -479,11 +479,28 @@ Create a `.env` file in the project root:
 TAVILY_API_KEY=<your-tavily-api-key>
 LANGSMITH_API_KEY=<your-langsmith-api-key>
 
-MODEL_NAME=qwen2.5:14b
+LLM_PROVIDER=ollama
+OLLAMA_MODE=local
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=qwen2.5:14b
 TEMPERATURE=0.0
 MAX_INTERVIEW_TURNS=2
 TAVILY_MAX_RESULTS=3
 ```
+
+For optional Groq hosted inference, set `LLM_PROVIDER=groq` and provide a Groq
+API key. The default Groq model is `openai/gpt-oss-20b`; override it with
+`GROQ_MODEL` if needed:
+
+```env
+LLM_PROVIDER=groq
+GROQ_API_KEY=<your-groq-api-key>
+GROQ_MODEL=openai/gpt-oss-20b
+TAVILY_API_KEY=<your-tavily-api-key>
+```
+
+For Streamlit Community Cloud, add the selected provider settings and API keys
+to the app's Secrets. Ollama remains the default when `LLM_PROVIDER` is unset.
 
 ### Required
 
@@ -492,6 +509,12 @@ TAVILY_MAX_RESULTS=3
 ### Optional
 
 `LANGSMITH_API_KEY` is optional and can be used for tracing and observability.
+Tracing is disabled unless `LANGSMITH_TRACING=true`. When enabled, recognized
+email, phone, US SSN, and payment-card patterns are masked in LangSmith trace
+inputs, outputs, metadata, and errors before upload. This does not detect all
+PII. The same recognized patterns are masked in retrieved source context before
+it is sent to the configured model, but undetected sensitive content may still
+be sent to external providers.
 
 > Never commit your `.env` file or API keys to source control.
 
@@ -543,6 +566,29 @@ From Studio you can inspect:
 - Tool calls
 - Human-in-the-loop interruptions
 - Checkpointed execution
+
+## 8. Tests and Evaluation
+
+Install the development test dependency and run the offline unit suite:
+
+```powershell
+uv sync --group dev
+uv run pytest
+```
+
+The tests mock model and search calls, so they do not need provider API keys.
+See [`evals/README.md`](evals/README.md) for the output quality rubric and
+limitations of the deterministic evaluation metrics.
+
+Topics and feedback are checked locally for common email, phone, US SSN, and
+payment-card patterns and masked before use; the app warns when it does so.
+The final report is checked and masked before display or download. This
+pattern-based check is limited and does not detect names or all sensitive data.
+To opt in to an additional report-quality call using the configured model,
+set `ENABLE_LLM_JUDGE=true` in `.env` or Streamlit Secrets. The judge receives
+the topic, report, and analyst memos after recognized PII patterns are masked;
+it scores faithfulness to the memos, relevance, citation support, coverage,
+and clarity. This adds an inference call and is not independent fact-checking.
 
 ---
 
@@ -597,12 +643,18 @@ Using fewer analysts and interview turns is useful for validating the environmen
 The application supports configuration for:
 
 ```text
-MODEL_NAME
+LLM_PROVIDER
+OLLAMA_MODE
+OLLAMA_BASE_URL
+OLLAMA_MODEL
+GROQ_API_KEY
+GROQ_MODEL
 TEMPERATURE
 MAX_INTERVIEW_TURNS
 TAVILY_MAX_RESULTS
 TAVILY_API_KEY
 LANGSMITH_API_KEY
+LANGSMITH_TRACING
 ```
 
 Example:
@@ -611,7 +663,10 @@ Example:
 TAVILY_API_KEY=<your-tavily-key>
 LANGSMITH_API_KEY=<your-langsmith-key>
 
-MODEL_NAME=qwen2.5:14b
+LLM_PROVIDER=ollama
+OLLAMA_MODE=local
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=qwen2.5:14b
 TEMPERATURE=0.0
 MAX_INTERVIEW_TURNS=2
 TAVILY_MAX_RESULTS=3

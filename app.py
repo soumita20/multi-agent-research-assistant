@@ -6,6 +6,8 @@ import streamlit as st
 from dotenv import load_dotenv
 
 from research_agent import AppConfig, build_assistant
+from privacy import configure_langsmith_tracing, redact_pii
+from evaluation import evaluate_report_with_judge
 
 
 load_dotenv()
@@ -37,9 +39,29 @@ def get_setting(name: str, default: str = "") -> str:
         return default
 
 
-def configure_ollama():
+def configure_privacy_safe_tracing() -> tuple[bool, str | None]:
+    """Make tracing explicit and apply the local PII anonymizer when enabled."""
+    langsmith_key = get_setting("LANGSMITH_API_KEY")
+    if langsmith_key:
+        os.environ["LANGSMITH_API_KEY"] = langsmith_key
+
+    enabled = get_setting("LANGSMITH_TRACING", "false").strip().lower() in {
+        "1", "true", "yes", "on"
+    }
+    try:
+        configure_langsmith_tracing(enabled)
+        return enabled, None
+    except Exception as exc:
+        configure_langsmith_tracing(False)
+        return False, str(exc)
+
+
+LANGSMITH_TRACING_ACTIVE, LANGSMITH_TRACING_ERROR = configure_privacy_safe_tracing()
+
+
+def configure_model():
     """
-    Configure local Ollama or Ollama Cloud.
+    Configure local Ollama, Ollama Cloud, or Groq hosted inference.
 
     Local:
         OLLAMA_MODE=local
@@ -51,7 +73,26 @@ def configure_ollama():
         OLLAMA_BASE_URL=https://ollama.com
         OLLAMA_MODEL=<supported cloud model>
         OLLAMA_API_KEY=<your Ollama API key>
+
+    Groq:
+        LLM_PROVIDER=groq
+        GROQ_MODEL=openai/gpt-oss-20b
+        GROQ_API_KEY=<your Groq API key>
     """
+    provider = get_setting("LLM_PROVIDER", "ollama").lower().strip()
+
+    if provider == "groq":
+        api_key = get_setting("GROQ_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "GROQ_API_KEY is required for Groq. Configure it in Streamlit secrets."
+            )
+        model = get_setting("GROQ_MODEL", "openai/gpt-oss-20b")
+        return provider, "", model, api_key
+
+    if provider != "ollama":
+        raise ValueError("LLM_PROVIDER must be 'ollama' or 'groq'.")
+
     mode = get_setting("OLLAMA_MODE", "local").lower().strip()
 
     model = get_setting(
@@ -92,7 +133,7 @@ def configure_ollama():
     os.environ["OLLAMA_BASE_URL"] = base_url
     os.environ["OLLAMA_MODEL"] = model
 
-    return mode, base_url, model
+    return mode, base_url, model, None
 
 # Session state
 
@@ -107,6 +148,9 @@ def initialise_state():
         "report": "",
         "error": None,
         "ollama_mode": None,
+        "pii_warning": None,
+        "judge_evaluation": None,
+        "judge_evaluation_error": None,
     }
 
     for key, value in defaults.items():
@@ -125,6 +169,9 @@ def reset_session():
         "report",
         "error",
         "ollama_mode",
+        "pii_warning",
+        "judge_evaluation",
+        "judge_evaluation_error",
     ):
         st.session_state.pop(key, None)
 
@@ -166,7 +213,7 @@ def display_analysts(analysts):
 # Workflow operations
 
 def generate_analysts(topic: str, max_analysts: int):
-    mode, base_url, model = configure_ollama()
+    mode, base_url, model, api_key = configure_model()
 
     tavily_key = get_setting("TAVILY_API_KEY")
 
@@ -185,6 +232,8 @@ def generate_analysts(topic: str, max_analysts: int):
         max_interview_turns=2,
         model_name=model,
         base_url=base_url,
+        llm_provider="groq" if mode == "groq" else "ollama",
+        api_key=api_key,
         temperature=0.0,
         tavily_max_results=int(get_setting("TAVILY_MAX_RESULTS", "3")),
         thread_id=uuid.uuid4().hex,
@@ -216,6 +265,13 @@ def generate_analysts(topic: str, max_analysts: int):
 
 
 def apply_feedback(feedback: str):
+    feedback, pii_categories = redact_pii(feedback)
+    if pii_categories:
+        st.session_state.pii_warning = (
+            "Personal data was masked in your feedback before it was sent to the model. "
+            f"Detected categories: {', '.join(pii_categories)}."
+        )
+
     analysts = st.session_state.assistant.submit_feedback(
         st.session_state.thread_id,
         feedback,
@@ -250,6 +306,27 @@ def execute_research():
                 )
 
             st.session_state.report = str(report)
+            masked_report, pii_categories = redact_pii(st.session_state.report)
+            if pii_categories:
+                st.session_state.report = masked_report
+                st.session_state.pii_warning = (
+                    "Personal data was masked in the generated report before display and download. "
+                    f"Detected categories: {', '.join(pii_categories)}."
+                )
+            st.session_state.judge_evaluation = None
+            st.session_state.judge_evaluation_error = None
+            if get_setting("ENABLE_LLM_JUDGE", "false").strip().lower() in {
+                "1", "true", "yes", "on"
+            }:
+                try:
+                    st.session_state.judge_evaluation = evaluate_report_with_judge(
+                        judge_llm=st.session_state.assistant.llm,
+                        topic=st.session_state.topic,
+                        report=st.session_state.report,
+                        evidence=st.session_state.assistant.last_evaluation_evidence,
+                    )
+                except Exception as judge_exc:
+                    st.session_state.judge_evaluation_error = str(judge_exc)
             st.session_state.stage = "complete"
             st.session_state.error = None
 
@@ -267,18 +344,26 @@ def execute_research():
 
 initialise_state()
 
+if st.session_state.pii_warning:
+    st.warning(st.session_state.pii_warning)
+
 with st.sidebar:
     st.header("Inference configuration")
 
+    current_provider = get_setting("LLM_PROVIDER", "ollama").lower().strip()
     current_mode = get_setting("OLLAMA_MODE", "local").lower()
 
     st.write(
         "**Configured mode:** "
-        + ("Ollama Cloud" if current_mode == "cloud" else "Local Ollama")
+        + (
+            "Groq"
+            if current_provider == "groq"
+            else ("Ollama Cloud" if current_mode == "cloud" else "Local Ollama")
+        )
     )
 
     st.caption(
-        "Change OLLAMA_MODE in your local .env file or "
+        "Change LLM_PROVIDER / OLLAMA_MODE in your local .env file or "
         "Streamlit Cloud secrets."
     )
 
@@ -286,6 +371,16 @@ with st.sidebar:
         "Local mode requires Ollama to be running on the "
         "same machine as Streamlit."
     )
+    st.caption(
+        "LLM-as-judge evaluation is opt-in with ENABLE_LLM_JUDGE=true and "
+        "uses the configured model/provider."
+    )
+    st.caption(
+        "LangSmith tracing: "
+        + ("enabled with recognized-PII masking" if LANGSMITH_TRACING_ACTIVE else "disabled")
+    )
+    if LANGSMITH_TRACING_ERROR:
+        st.warning("LangSmith tracing was disabled: " + LANGSMITH_TRACING_ERROR)
 
 # Stage 1: Topic and analyst count
 
@@ -321,9 +416,18 @@ if st.session_state.stage == "input":
             st.warning("Please enter a research topic.")
         else:
             try:
+                safe_topic, pii_categories = redact_pii(topic.strip())
+                if pii_categories:
+                    st.session_state.pii_warning = (
+                        "Personal data was masked in your topic before it was sent to the model. "
+                        f"Detected categories: {', '.join(pii_categories)}."
+                    )
+                    st.warning(st.session_state.pii_warning)
+                else:
+                    st.session_state.pii_warning = None
                 with st.spinner("Generating analyst panel..."):
                     generate_analysts(
-                        topic.strip(),
+                        safe_topic,
                         int(max_analysts),
                     )
 
@@ -404,6 +508,13 @@ if st.session_state.stage in (
                 st.warning("Please enter your feedback.")
             else:
                 try:
+                    _, pii_categories = redact_pii(feedback.strip())
+                    if pii_categories:
+                        st.session_state.pii_warning = (
+                            "Personal data was masked in your feedback before it was sent to the model. "
+                            f"Detected categories: {', '.join(pii_categories)}."
+                        )
+                        st.warning(st.session_state.pii_warning)
                     with st.spinner("Updating analyst perspectives..."):
                         apply_feedback(feedback.strip())
 
@@ -447,7 +558,44 @@ if st.session_state.stage == "complete":
     st.divider()
     st.header("Final Research Report")
 
+    if st.session_state.pii_warning:
+        st.warning(st.session_state.pii_warning)
+
     st.markdown(st.session_state.report)
+
+    if st.session_state.judge_evaluation_error:
+        st.warning(
+            "The report was generated, but its LLM judge evaluation failed: "
+            + st.session_state.judge_evaluation_error
+        )
+
+    evaluation = st.session_state.judge_evaluation
+    if evaluation:
+        st.subheader("LLM judge evaluation")
+        st.caption(
+            "Scores compare the report with the analyst memos. They are review signals, "
+            "not proof of factual accuracy or primary-source support."
+        )
+        st.metric("Overall", f"{evaluation['overall_score']} / 5")
+        for criterion in (
+            "faithfulness",
+            "relevance",
+            "citation_support",
+            "coverage",
+            "clarity",
+        ):
+            detail = evaluation[criterion]
+            with st.expander(f"{criterion.replace('_', ' ').title()}: {detail['score']} / 5"):
+                st.write(detail["rationale"])
+                if detail["concerns"]:
+                    st.write("Concerns:")
+                    for concern in detail["concerns"]:
+                        st.write(f"- {concern}")
+        if evaluation["pii_redacted_categories"]:
+            st.caption(
+                "The judge input or explanations had recognized PII patterns masked: "
+                + ", ".join(evaluation["pii_redacted_categories"])
+            )
 
     st.download_button(
         label="Download research report (.md)",

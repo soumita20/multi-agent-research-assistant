@@ -6,6 +6,7 @@ dependencies = [
     "colorama>=0.4.6",
     "langchain-community>=0.4.2",
     "langchain-core>=1.6.7",
+    "langchain-groq",
     "langchain-ollama>=1.1.0",
     "langchain-tavily>=0.2.18",
     "langgraph>=1.2.14",
@@ -15,12 +16,22 @@ dependencies = [
     "numpy>=2.5.3",
     "pydantic>=2.13.5",
     "python-dotenv>=1.2.4",
+    "streamlit",
     "torch",
     "torchaudio",
     "torchvision",
     "typing-extensions>=4.16.0",
     "wikipedia>=1.4.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
 
 [[tool.uv.index]]
 name = "pytorch-cu128"

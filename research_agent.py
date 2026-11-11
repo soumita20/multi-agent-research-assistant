@@ -39,8 +39,10 @@ import getpass
 import logging
 import operator
 import functools
+import json
 import os
 import re
+import time
 from dataclasses import dataclass, field
 from typing import Annotated, Any, List, Optional
 
@@ -53,6 +55,7 @@ from langchain_core.messages import (
     get_buffer_string,
 )
 from langchain_community.document_loaders import WikipediaLoader
+from langchain_groq import ChatGroq
 from langchain_ollama import ChatOllama
 from langchain_tavily import TavilySearch
 from langgraph.checkpoint.memory import MemorySaver
@@ -62,6 +65,8 @@ from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
 
 from langsmith import traceable
+from evaluation import evaluate_report_with_judge
+from privacy import configure_langsmith_tracing, redact_pii
 
 logger = logging.getLogger("research_agent")
 
@@ -85,8 +90,13 @@ class AppConfig:
     topic: str
     max_analysts: int = 3
     max_interview_turns: int = 2
-    model_name: str = os.getenv("OLLAMA_MODEL", "qwen2.5:14b")
+    model_name: str = os.getenv(
+        "GROQ_MODEL" if os.getenv("LLM_PROVIDER", "ollama").lower() == "groq" else "OLLAMA_MODEL",
+        "openai/gpt-oss-20b" if os.getenv("LLM_PROVIDER", "ollama").lower() == "groq" else "qwen2.5:14b",
+    )
     base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    llm_provider: str = os.getenv("LLM_PROVIDER", "ollama")
+    api_key: Optional[str] = field(default_factory=lambda: os.getenv("GROQ_API_KEY"))
     temperature: float = 0.0
     tavily_max_results: int = 3
     thread_id: str = "1"
@@ -131,7 +141,6 @@ def _ensure_env_var(var_name: str) -> None:
 def load_environment() -> None:
     """Load .env and make sure required API keys are present."""
     load_dotenv()
-    _ensure_env_var("LANGSMITH_API_KEY")
     _ensure_env_var("TAVILY_API_KEY")
 
     for var_name in ("LANGSMITH_API_KEY", "TAVILY_API_KEY"):
@@ -482,17 +491,64 @@ class ResearchAssistant:
         self.checkpointer = checkpointer or MemorySaver() if use_checkpointer else None
         self.save_to_disk = save_to_disk
         self.token_tracker = TokenTracker()
+        self.last_evaluation_evidence: List[str] = []
         self.social_domains = list(social_domains or []) if enable_social_search else []
 
         self._interview_builder = self._build_interview_subgraph()
         self.graph = self._build_research_graph()
 
     # LLM Call helpers
+
+    @staticmethod
+    def _invoke_with_rate_limit_retry(operation, call_label: str, max_retries: int = 3):
+        """Retry HTTP 429 responses after the provider's suggested wait."""
+        for attempt in range(max_retries + 1):
+            try:
+                return operation()
+            except Exception as exc:
+                response = getattr(exc, "response", None)
+                status_code = getattr(exc, "status_code", None)
+                if status_code is None:
+                    status_code = getattr(response, "status_code", None)
+                if status_code != 429 or attempt >= max_retries:
+                    raise
+
+                headers = getattr(response, "headers", {}) or {}
+                retry_after = next(
+                    (value for key, value in headers.items() if key.lower() == "retry-after"),
+                    None,
+                )
+                delay = None
+                if retry_after is not None:
+                    try:
+                        delay = float(retry_after)
+                    except (TypeError, ValueError):
+                        pass
+
+                if delay is None:
+                    match = re.search(r"try again in ([0-9.]+)s", str(exc), re.IGNORECASE)
+                    if match:
+                        delay = float(match.group(1))
+
+                if delay is None or delay <= 0:
+                    delay = min(2 ** attempt, 30)
+                delay = min(delay + 0.5, 120)
+
+                logger.warning(
+                    "LLM rate limit | call=%s | retry=%d/%d | waiting %.1fs",
+                    call_label,
+                    attempt + 1,
+                    max_retries,
+                    delay,
+                )
+                time.sleep(delay)
     
     @traceable(name="invoke_llm", run_type="tool")
     def _invoke(self, messages: list, call_label: str):
         """Plain (non-structured) LLM call, with token usage recorded."""
-        response = self.llm.invoke(messages)
+        response = self._invoke_with_rate_limit_retry(
+            lambda: self.llm.invoke(messages), call_label
+        )
         self.token_tracker.record(call_label, response)
         return response
     
@@ -504,7 +560,9 @@ class ResearchAssistant:
             include_raw=True,
         )
 
-        result = structured_llm.invoke(messages)
+        result = self._invoke_with_rate_limit_retry(
+            lambda: structured_llm.invoke(messages), call_label
+        )
 
         if not isinstance(result, dict):
             logger.warning(
@@ -666,10 +724,20 @@ class ResearchAssistant:
                 query = raw_query.strip() if raw_query else ""
                 if not query:
                     raise ValueError("Empty or null search_query returned")
-                return query
+                return self._mask_search_query(query)
         except (OutputParserException, ValueError, Exception) as exc:
             logger.warning("Search query generation failed (%s); using fallback.", exc)
-            return self._fallback_search_query(state)
+            return self._mask_search_query(self._fallback_search_query(state))
+
+    @staticmethod
+    def _mask_search_query(query: str) -> str:
+        safe_query, categories = redact_pii(query)
+        if categories:
+            logger.info(
+                "Masked recognized personal-data patterns in a search query: %s",
+                ", ".join(categories),
+            )
+        return safe_query
 
     @staticmethod
     def _truncate(text: str, max_words: int) -> str:
@@ -730,6 +798,13 @@ class ResearchAssistant:
         f'<Document href="{doc.get("url", "")}"/>\n{doc.get("content", "")}\n</Document>'
         for doc in search_docs
         if isinstance(doc, dict))
+
+        formatted_docs, pii_categories = redact_pii(formatted_docs)
+        if pii_categories:
+            logger.info(
+                "Masked recognized personal-data patterns in web-search context: %s",
+                ", ".join(pii_categories),
+            )
 
         return {"context": [formatted_docs]}
 
@@ -809,6 +884,12 @@ class ResearchAssistant:
             for doc in search_docs
             if hasattr(doc, "page_content") and isinstance(getattr(doc, "metadata", None), dict)
         )
+        formatted_docs, pii_categories = redact_pii(formatted_docs)
+        if pii_categories:
+            logger.info(
+                "Masked recognized personal-data patterns in Wikipedia context: %s",
+                ", ".join(pii_categories),
+            )
         return {"context": [formatted_docs]}
 
     @traceable(name="search_social", run_type="tool")
@@ -848,6 +929,12 @@ class ResearchAssistant:
             for doc in search_docs
             if isinstance(doc, dict)
         )
+        formatted_docs, pii_categories = redact_pii(formatted_docs)
+        if pii_categories:
+            logger.info(
+                "Masked recognized personal-data patterns in social-search context: %s",
+                ", ".join(pii_categories),
+            )
         return {"context": [formatted_docs]}
 
     @traceable(name="generate_answer", run_type="tool")
@@ -1099,6 +1186,7 @@ class ResearchAssistant:
             logger.info("Completed node: %s", node_name)
 
         final_state = self.graph.get_state(thread)
+        self.last_evaluation_evidence = list(final_state.values.get("sections", []))
         return final_state.values.get("final_report", "")
 
 def print_analysts(analysts: List[Analyst]) -> None:
@@ -1127,12 +1215,23 @@ def save_report(report: str, output_path: str) -> None:
 
 def build_assistant(config: AppConfig) -> ResearchAssistant:
     """Construct the LLM, search tool, and assistant from config."""
-    #llm = ChatOllama(model=config.model_name, temperature=config.temperature)
-    llm = ChatOllama(
-        model=config.model_name,
-        base_url=config.base_url,
-        temperature=config.temperature,
-    )
+    provider = config.llm_provider.lower().strip()
+    if provider == "ollama":
+        llm = ChatOllama(
+            model=config.model_name,
+            base_url=config.base_url,
+            temperature=config.temperature,
+        )
+    elif provider == "groq":
+        if not config.api_key:
+            raise ValueError("GROQ_API_KEY is required when LLM_PROVIDER=groq.")
+        llm = ChatGroq(
+            model=config.model_name,
+            api_key=config.api_key,
+            temperature=config.temperature,
+        )
+    else:
+        raise ValueError("LLM_PROVIDER must be 'ollama' or 'groq'.")
     search_tool = TavilySearch(max_results=config.tavily_max_results)
     return ResearchAssistant(
         llm=llm,
@@ -1153,7 +1252,13 @@ def parse_args() -> AppConfig:
     )
     parser.add_argument("--max-analysts", type=int, default=3)
     parser.add_argument("--max-interview-turns", type=int, default=2)
-    parser.add_argument("--model", default="qwen2.5:14b", dest="model_name")
+    default_provider = os.getenv("LLM_PROVIDER", "ollama").lower().strip()
+    default_model = (
+        os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+        if default_provider == "groq"
+        else os.getenv("OLLAMA_MODEL", "qwen2.5:14b")
+    )
+    parser.add_argument("--model", default=default_model, dest="model_name")
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--thread-id", default="1")
     parser.add_argument("--output", default="research_report.md", dest="output_path")
@@ -1192,6 +1297,13 @@ def parse_args() -> AppConfig:
         if not topic:
             parser.error("--topic is required (or must be entered when prompted).")
 
+    topic, pii_categories = redact_pii(topic)
+    if pii_categories:
+        print(
+            "Warning: Personal data was masked in the research topic before use. "
+            f"Detected categories: {', '.join(pii_categories)}."
+        )
+
     social_domains = [d.strip() for d in args.social_domains.split(",") if d.strip()]
 
     return AppConfig(
@@ -1199,6 +1311,8 @@ def parse_args() -> AppConfig:
         max_analysts=args.max_analysts,
         max_interview_turns=args.max_interview_turns,
         model_name=args.model_name,
+        llm_provider=default_provider,
+        api_key=os.getenv("GROQ_API_KEY"),
         temperature=args.temperature,
         thread_id=args.thread_id,
         output_path=args.output_path,
@@ -1257,6 +1371,15 @@ def main() -> None:
     log_gpu_availability()
     load_environment()
 
+    trace_requested = os.getenv("LANGSMITH_TRACING", "false").strip().lower() in {
+        "1", "true", "yes", "on"
+    }
+    try:
+        configure_langsmith_tracing(trace_requested)
+    except Exception as exc:
+        configure_langsmith_tracing(False)
+        logger.warning("LangSmith tracing disabled: %s", exc)
+
     assistant = build_assistant(config)
 
     logger.info("Generating analyst panel for topic: %s", config.topic)
@@ -1266,6 +1389,13 @@ def main() -> None:
     if config.interactive_feedback:
         while True:
             feedback = collect_human_feedback()
+            if feedback:
+                feedback, pii_categories = redact_pii(feedback)
+                if pii_categories:
+                    print(
+                        "Warning: Personal data was masked in your feedback before use. "
+                        f"Detected categories: {', '.join(pii_categories)}."
+                    )
             analysts = assistant.submit_feedback(config.thread_id, feedback)
             if feedback is None:
                 break
@@ -1280,6 +1410,26 @@ def main() -> None:
     if not report:
         logger.error("No final report was produced.")
         return
+
+    report, pii_categories = redact_pii(report)
+    if pii_categories:
+        print(
+            "Warning: Personal data was masked in the report before it was saved. "
+            f"Detected categories: {', '.join(pii_categories)}."
+        )
+
+    if os.getenv("ENABLE_LLM_JUDGE", "false").strip().lower() in {"1", "true", "yes", "on"}:
+        try:
+            judge_result = evaluate_report_with_judge(
+                judge_llm=assistant.llm,
+                topic=config.topic,
+                report=report,
+                evidence=assistant.last_evaluation_evidence,
+            )
+            print("\nLLM judge evaluation:")
+            print(json.dumps(judge_result, ensure_ascii=False, indent=2))
+        except Exception as exc:
+            logger.warning("LLM judge evaluation failed; saving report without scores: %s", exc)
 
     output_path = resolve_output_path(config.topic, config.output_path)
     if config.interactive_feedback and not config.output_path:
